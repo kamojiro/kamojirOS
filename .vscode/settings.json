@@ -1,0 +1,29 @@
+{
+    "[*]": {
+        "editor.tabSize": 4
+    },
+    "[json]": {
+        "editor.tabSize": 2
+    },
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    },
+    "python.analysis.extraPaths": [
+        ".venv/lib/python3.14/site-packages"
+    ],
+    "python.analysis.stubPath": "stubs",
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.envFile": "",
+    "python.testing.pytestArgs": [
+        "--color=yes"
+    ],
+    "editor.inlayHints.enabled": "on",
+    "python.analysis.inlayHints.variableTypes": true,
+    "python.analysis.inlayHints.functionReturnTypes": true
+}

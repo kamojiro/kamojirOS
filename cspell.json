@@ -1,0 +1,21 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "lxml",
+    "pycache",
+    "pylint",
+    "pyright",
+    "pytest",
+    "testpaths",
+    "venv"
+  ],
+  "ignorePaths": [
+    ".venv/**",
+    "__pycache__/**",
+    ".ruff_cache/**",
+    ".pytest_cache/**",
+    "dist/**",
+    "build/**"
+  ]
+}

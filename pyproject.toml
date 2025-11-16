@@ -1,0 +1,67 @@
+[project]
+name = "kamojirOS"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "bs4>=0.0.2",
+    "lxml>=6.0.2",
+    "nox>=2025.10.16",
+    "pyright>=1.1.407",
+    "pytest>=9.0.0",
+    "requests>=2.32.5",
+    "ruff>=0.14.4",
+    "watchfiles>=1.1.1",
+]
+
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/template"]
+
+[project.scripts]
+kamojiros = "template.main:main"
+
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".venv",
+]
+
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["ALL"]
+fixable = ["ALL"]
+ignore = ["D203", "D213", "COM812", "TD003", "FIX"]
+allowed-confusables = ["！","？", "（", "）"]
+unfixable = []
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.lint.pylint]
+max-args = 15
+max-positional-args = 5
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "SLF001"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src"]
