@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync project (install deps)
+        run: uv sync --all-extras --dev
+
+      - name: Run nox ci session
+        env:
+          # src/kamojiros を import できるようにしておくと安心
+          PYTHONPATH: ${{ github.workspace }}
+        run: uv run nox -s ci
