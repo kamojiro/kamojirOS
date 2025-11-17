@@ -2,15 +2,23 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "ingestor",
+    "KAMOJIROS",
+    "Kamomo",
     "lxml",
     "pycache",
+    "pydantic",
     "pylint",
     "pyright",
     "pytest",
+    "pyyaml",
     "testpaths",
-    "venv"
+    "typer",
+    "venv",
+    "watchfiles"
   ],
   "ignorePaths": [
+    ".env",
     ".venv/**",
     "__pycache__/**",
     ".ruff_cache/**",
