@@ -1,5 +1,6 @@
 """self_observer_service モジュール."""
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from kamojiros.core.time import now_jst
@@ -21,26 +22,70 @@ class SelfObserverService:
         """初期化."""
         self._report_repo = report_repo
 
-    def create_test_report(self) -> Report:
-        """自己観察エージェント用のテストレポートを作成して保存する."""
+    def analyze_daily_activity(self) -> Report:
+        """直近24時間の活動を分析し、METAレポートを作成する."""
         now = now_jst()
-        note_id = now.strftime("%Y-%m-%d-%H%M-meta-self-observer-test")
+        since = now - timedelta(hours=24)
 
+        # 直近のレポートを取得
+        recent_reports = self._report_repo.find_recent(since)
+
+        # 集計
+        total_count = len(recent_reports)
+        type_counts: dict[str, int] = {}
+        author_counts: dict[str, int] = {}
+        tag_counts: dict[str, int] = {}
+
+        for r in recent_reports:
+            # Type
+            t = r.meta.type.value
+            type_counts[t] = type_counts.get(t, 0) + 1
+
+            # Author
+            a = r.meta.author.value
+            author_counts[a] = author_counts.get(a, 0) + 1
+
+            # Tags
+            for tag in r.meta.tags:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+        # レポート本文作成
+        lines = [
+            f"# Daily Activity Report ({now.strftime('%Y-%m-%d')})",
+            "",
+            f"**集計期間**: {since.strftime('%Y-%m-%d %H:%M')} ~ {now.strftime('%H:%M')}",
+            "",
+            "## Summary",
+            "",
+            f"- **Total Reports**: {total_count}",
+            "",
+            "### By Type",
+            "",
+        ]
+        for t, c in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
+            lines.append(f"- **{t}**: {c}")
+
+        lines.extend(["", "### By Author", ""])
+        for a, c in sorted(author_counts.items(), key=lambda x: x[1], reverse=True):
+            lines.append(f"- **{a}**: {c}")
+
+        lines.extend(["", "### Top Tags", ""])
+        for tag, c in sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+            lines.append(f"- **{tag}**: {c}")
+
+        lines.append("")
+        body = "\n".join(lines)
+
+        # 保存
+        note_id = now.strftime("%Y-%m-%d-%H%M-meta-daily-report")
         meta = ReportMeta(
             note_id=note_id,
-            title="self_observer v0 テストノート",
+            title=f"Daily Activity Report {now.strftime('%Y-%m-%d')}",
             created_at=now,
             updated_at=now,
             type=ReportType.META,
             author=ReportAuthor.SELF_OBSERVER,
-            tags=["test", "self-observer"],
-        )
-
-        body = (
-            "# self_observer v0 テスト\n\n"
-            f"- 生成時刻: {now.isoformat()}\n"
-            "- これは最初のテストノートです。\n"
-            "- Kamomo Notes に journal として保存されます。\n"
+            tags=["daily-report", "meta"],
         )
 
         report = Report(meta=meta, body_markdown=body)

@@ -3,7 +3,7 @@
 import typer
 
 from kamojiros.config.settings import Settings
-from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportWriter
+from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.services.self_observer_service import SelfObserverService
 
 
@@ -11,10 +11,10 @@ def run() -> None:
     """self_observer アプリケーションのエントリーポイント."""
     settings = Settings()
 
-    repo = MarkdownReportWriter(notes_repo_root=settings.notes.repo_root)
+    repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = SelfObserverService(report_repo=repo)
 
-    report = service.create_test_report()
+    report = service.analyze_daily_activity()
     typer.echo(f"wrote: {report.meta.note_id}")
 
 
