@@ -1,14 +1,18 @@
 """Kamomo Notes (Git repo) に Report を保存する実装を定義するモジュール."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 import yaml
 from pydantic import HttpUrl
 
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass
@@ -17,6 +21,7 @@ class MarkdownReportRepository:
 
     DOCS: ClassVar[str] = "docs"
     JOURNAL: ClassVar[str] = "journal"
+    _EXPECTED_FRONT_MATTER_PARTS: ClassVar[int] = 3
 
     notes_repo_root: Path  # Kamomo Notes を clone したルート
 
@@ -82,7 +87,7 @@ class MarkdownReportRepository:
         try:
             content = file_path.read_text(encoding="utf-8")
             parts = content.split("---", 2)
-            if len(parts) < 3:
+            if len(parts) < self._EXPECTED_FRONT_MATTER_PARTS:
                 return None
 
             fm_text = parts[1]
@@ -101,6 +106,6 @@ class MarkdownReportRepository:
                 source_urls=[HttpUrl(u) for u in fm.get("source_urls", [])],
             )
             return Report(meta=meta, body_markdown=body.strip())
-        except Exception:
+        except (yaml.YAMLError, ValueError, KeyError, TypeError):
             # パースエラーなどは一旦無視（ログ出すべきだが）
             return None

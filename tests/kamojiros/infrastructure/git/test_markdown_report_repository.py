@@ -1,22 +1,22 @@
 """MarkdownReportWriter の単体テスト."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import yaml
 
 from kamojiros.core.time import JST
-from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportWriter
+from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-def _make_report(created_at: datetime) -> Report:
+def _make_report(created_at: datetime, note_id: str = "2025-11-17-2100-meta-self-observer-test") -> Report:
     """テスト用の Report を作成するヘルパー."""
     meta = ReportMeta(
-        note_id="2025-11-17-2100-meta-self-observer-test",
+        note_id=note_id,
         title="self_observer v0 テストノート",
         created_at=created_at,
         updated_at=created_at,
@@ -34,8 +34,8 @@ def test_save_creates_expected_path_and_file(tmp_path: Path) -> None:
     notes_repo_root = tmp_path / "notes"
     report = _make_report(datetime(2025, 11, 17, 21, 0, 0, tzinfo=JST))
 
-    writer = MarkdownReportWriter(notes_repo_root=notes_repo_root)
-    path = writer.save(report)
+    repo = MarkdownReportRepository(notes_repo_root=notes_repo_root)
+    path = repo.save(report)
 
     # ファイルパスの検証
     expected_dir = notes_repo_root / "docs" / "journal" / "2025" / "11" / "17"
@@ -52,8 +52,8 @@ def test_save_writes_front_matter_and_body(tmp_path: Path) -> None:
     created_at = datetime(2025, 11, 17, 21, 0, 0, tzinfo=JST)
     report = _make_report(created_at)
 
-    writer = MarkdownReportWriter(notes_repo_root=notes_repo_root)
-    path = writer.save(report)
+    repo = MarkdownReportRepository(notes_repo_root=notes_repo_root)
+    path = repo.save(report)
 
     content = path.read_text(encoding="utf-8")
 
@@ -79,3 +79,41 @@ def test_save_writes_front_matter_and_body(tmp_path: Path) -> None:
 
     # 本文の検証（末尾の改行 1 つだけを許容）
     assert body_part == report.body_markdown.rstrip() + "\n"
+
+
+def test_find_recent_returns_reports_in_range(tmp_path: Path) -> None:
+    """指定した期間内のレポートが取得できることを検証する."""
+    notes_repo_root = tmp_path / "notes"
+    repo = MarkdownReportRepository(notes_repo_root=notes_repo_root)
+
+    now = datetime.now(tz=JST)
+
+    # 3つのレポートを作成
+    # 1. 25時間前 (範囲外)
+    r1 = _make_report(now - timedelta(hours=25), note_id="old-report")
+    repo.save(r1)
+
+    # 2. 23時間前 (範囲内)
+    r2 = _make_report(now - timedelta(hours=23), note_id="recent-report-1")
+    repo.save(r2)
+
+    # 3. 1時間前 (範囲内)
+    r3 = _make_report(now - timedelta(hours=1), note_id="recent-report-2")
+    repo.save(r3)
+
+    # 24時間前以降を検索
+    since = now - timedelta(hours=24)
+    reports = repo.find_recent(since)
+
+    # 検証
+    expected_report_count = 2
+    assert len(reports) == expected_report_count
+    note_ids = {r.meta.note_id for r in reports}
+    assert "recent-report-1" in note_ids
+    assert "recent-report-2" in note_ids
+    assert "old-report" not in note_ids
+
+    # 内容が正しくロードされているか (1つだけチェック)
+    loaded_r3 = next(r for r in reports if r.meta.note_id == "recent-report-2")
+    assert loaded_r3.meta.title == r3.meta.title
+    assert loaded_r3.body_markdown == r3.body_markdown

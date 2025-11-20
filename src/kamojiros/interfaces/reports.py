@@ -1,9 +1,11 @@
 """ReportRepository のインターフェイスを定義するモジュール."""
 
-from datetime import datetime
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from datetime import datetime
     from pathlib import Path
 
     from kamojiros.models import Report

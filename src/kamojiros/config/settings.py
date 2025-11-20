@@ -22,11 +22,19 @@ class SelfObserverSettings(BaseModel):
     schedule_cron: str = "0 * * * *"  # 例: 毎時
 
 
+class TrackerSettings(BaseModel):
+    """tracker_api 関連の設定."""
+
+    db_url: str = "sqlite:///kamojiros.db"
+    base_url: str = "https://example.com"
+
+
 class Settings(BaseSettings):
     """アプリ全体の設定（エントリポイント用）."""
 
     notes: NotesSettings
     self_observer: SelfObserverSettings = SelfObserverSettings()
+    tracker: TrackerSettings = TrackerSettings()
 
     def __init__(self, **values: Any) -> None:
         """環境変数 or 引数から設定を構築する.
