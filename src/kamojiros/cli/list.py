@@ -14,12 +14,12 @@ from kamojiros.models import ReportAuthor, ReportType
 from kamojiros.services.report_service import ReportService
 
 
-def list_reports(
+def list_reports(  # noqa: C901
     limit: int = typer.Option(10, "--limit", "-n", help="Number of reports to show"),
-    since: str = typer.Option(None, "--since", help="Show reports since date (YYYY-MM-DD)"),
-    report_type: str = typer.Option(None, "--type", help="Filter by type (tech/paper/life/meta)"),
-    author: str = typer.Option(None, "--author", help="Filter by author"),
-    tags: str = typer.Option(None, "--tags", help="Filter by tags (comma-separated)"),
+    since: str | None = typer.Option(None, "--since", help="Show reports since date (YYYY-MM-DD)"),
+    report_type: str | None = typer.Option(None, "--type", help="Filter by type (tech/paper/life/meta)"),
+    author: str | None = typer.Option(None, "--author", help="Filter by author"),
+    tags: str | None = typer.Option(None, "--tags", help="Filter by tags (comma-separated)"),
     json_format: bool = typer.Option(False, "--json", help="Output as JSON"),
     show_body: bool = typer.Option(False, "--show-body", help="Show body preview in table"),
 ) -> None:
@@ -58,6 +58,9 @@ def list_reports(
 
     # レポート取得
     settings = Settings()
+    if settings.notes is None:
+        msg = "settings.notes must be set"
+        raise RuntimeError(msg)
     repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = ReportService(report_repo=repo)
 

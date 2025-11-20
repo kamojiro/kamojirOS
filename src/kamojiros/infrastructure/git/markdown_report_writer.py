@@ -1,4 +1,4 @@
-"""Kamomo Notes (Git repo) に Report を保存する実装を定義するモジュール."""
+"""Kamojiros Notes (Git repo) に Report を保存する実装を定義するモジュール."""
 
 from __future__ import annotations
 
@@ -14,16 +14,20 @@ from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
 if TYPE_CHECKING:
     from pathlib import Path
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class MarkdownReportRepository:
-    """Kamomo Notes (Git repo) に Report を保存・読み出しする実装."""
+    """Kamojiros Notes (Git repo) に Report を保存・読み出しする実装."""
 
     DOCS: ClassVar[str] = "docs"
     JOURNAL: ClassVar[str] = "journal"
     _EXPECTED_FRONT_MATTER_PARTS: ClassVar[int] = 3
 
-    notes_repo_root: Path  # Kamomo Notes を clone したルート
+    notes_repo_root: Path  # Kamojiros Notes を clone したルート
 
     def __init__(self, notes_repo_root: Path) -> None:
         """初期化."""
@@ -106,6 +110,6 @@ class MarkdownReportRepository:
                 source_urls=[HttpUrl(u) for u in fm.get("source_urls", [])],
             )
             return Report(meta=meta, body_markdown=body.strip())
-        except (yaml.YAMLError, ValueError, KeyError, TypeError):
-            # パースエラーなどは一旦無視（ログ出すべきだが）
+        except (yaml.YAMLError, ValueError, KeyError, TypeError) as e:
+            logger.debug("Failed to load report from %s: %s", file_path, e)
             return None

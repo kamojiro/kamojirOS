@@ -24,6 +24,9 @@ def search(
 
     # レポート検索
     settings = Settings()
+    if settings.notes is None:
+        msg = "settings.notes must be set"
+        raise RuntimeError(msg)
     repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = ReportService(report_repo=repo)
 

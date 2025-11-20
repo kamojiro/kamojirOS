@@ -10,6 +10,9 @@ from kamojiros.services.self_observer_service import SelfObserverService
 def run() -> None:
     """self_observer アプリケーションのエントリーポイント."""
     settings = Settings()
+    if settings.notes is None:
+        msg = "settings.notes must be set"
+        raise RuntimeError(msg)
 
     repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = SelfObserverService(report_repo=repo)

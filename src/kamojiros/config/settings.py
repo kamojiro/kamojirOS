@@ -3,13 +3,13 @@
 from pathlib import Path  # noqa: TC003
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from kamojiros.config.base_settings import BaseSettings
 
 
 class NotesSettings(BaseModel):
-    """Kamomo Notes (Git repo) 関連の設定."""
+    """Kamojiros Notes (Git repo) 関連の設定."""
 
     repo_root: Path
     default_branch: str = "main"
@@ -32,9 +32,17 @@ class TrackerSettings(BaseModel):
 class Settings(BaseSettings):
     """アプリ全体の設定（エントリポイント用）."""
 
-    notes: NotesSettings
+    notes: NotesSettings | None = None
     self_observer: SelfObserverSettings = SelfObserverSettings()
     tracker: TrackerSettings = TrackerSettings()
+
+    @field_validator("notes")
+    @classmethod
+    def _ensure_notes(cls, v: NotesSettings | None) -> NotesSettings:
+        if v is None:
+            msg = "KAMOJIROS_NOTES__REPO_ROOT is required"
+            raise ValueError(msg)
+        return v
 
     def __init__(self, **values: Any) -> None:
         """環境変数 or 引数から設定を構築する.

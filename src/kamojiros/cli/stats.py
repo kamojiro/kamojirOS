@@ -14,7 +14,7 @@ from kamojiros.services.report_service import ReportService
 
 
 def stats(
-    since: str = typer.Option(None, "--since", help="Stats since date (YYYY-MM-DD)"),
+    since: str | None = typer.Option(None, "--since", help="Stats since date (YYYY-MM-DD)"),
 ) -> None:
     """統計情報を表示する."""
     # since をパース
@@ -28,6 +28,9 @@ def stats(
 
     # 統計取得
     settings = Settings()
+    if settings.notes is None:
+        msg = "settings.notes must be set"
+        raise RuntimeError(msg)
     repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = ReportService(report_repo=repo)
 

@@ -3,11 +3,13 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from kamojiros.core.naming import make_note_id
 from kamojiros.core.time import now_jst
 from kamojiros.models import (
     Report,
     ReportAuthor,
     ReportMeta,
+    ReportStats,
     ReportType,
 )
 
@@ -31,23 +33,7 @@ class SelfObserverService:
         recent_reports = self._report_repo.find_recent(since)
 
         # 集計
-        total_count = len(recent_reports)
-        type_counts: dict[str, int] = {}
-        author_counts: dict[str, int] = {}
-        tag_counts: dict[str, int] = {}
-
-        for r in recent_reports:
-            # Type
-            t = r.meta.type.value
-            type_counts[t] = type_counts.get(t, 0) + 1
-
-            # Author
-            a = r.meta.author.value
-            author_counts[a] = author_counts.get(a, 0) + 1
-
-            # Tags
-            for tag in r.meta.tags:
-                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        stats = ReportStats.from_reports(recent_reports, period_start=since, period_end=now)
 
         # レポート本文作成
         lines = [
@@ -57,27 +43,27 @@ class SelfObserverService:
             "",
             "## Summary",
             "",
-            f"- **Total Reports**: {total_count}",
+            f"- **Total Reports**: {stats.total_count}",
             "",
             "### By Type",
             "",
         ]
-        for t, c in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
+        for t, c in sorted(stats.by_type.items(), key=lambda x: x[1], reverse=True):
             lines.append(f"- **{t}**: {c}")
 
         lines.extend(["", "### By Author", ""])
-        for a, c in sorted(author_counts.items(), key=lambda x: x[1], reverse=True):
+        for a, c in sorted(stats.by_author.items(), key=lambda x: x[1], reverse=True):
             lines.append(f"- **{a}**: {c}")
 
         lines.extend(["", "### Top Tags", ""])
-        for tag, c in sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+        for tag, c in sorted(stats.top_tags.items(), key=lambda x: x[1], reverse=True):
             lines.append(f"- **{tag}**: {c}")
 
         lines.append("")
         body = "\n".join(lines)
 
         # 保存
-        note_id = now.strftime("%Y-%m-%d-%H%M-meta-daily-report")
+        note_id = make_note_id(ReportType.META, "daily-report")
         meta = ReportMeta(
             note_id=note_id,
             title=f"Daily Activity Report {now.strftime('%Y-%m-%d')}",

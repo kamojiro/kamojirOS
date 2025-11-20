@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 if TYPE_CHECKING:
-    from kamojiros.models import Report
+    from kamojiros.models import Report, ReportStats
 
 console = Console()
 
@@ -69,18 +69,18 @@ def format_report_json(reports: list[Report]) -> None:
     console.print_json(json.dumps(data, ensure_ascii=False, indent=2))
 
 
-def format_stats(stats: dict) -> None:
+def format_stats(stats: ReportStats) -> None:
     """統計情報を表示する."""
     console.print("\n[bold]Statistics[/bold]")
-    console.print(f"Period: {stats['period_start']} to {stats['period_end']}")
-    console.print(f"Total Reports: [bold]{stats['total_count']}[/bold]\n")
+    console.print(f"Period: {stats.period_start} to {stats.period_end}")
+    console.print(f"Total Reports: [bold]{stats.total_count}[/bold]\n")
 
     # By Type
     console.print("[bold]By Type:[/bold]")
     type_table = Table()
     type_table.add_column("Type", style="green")
     type_table.add_column("Count", style="cyan")
-    for type_name, count in stats["by_type"].items():
+    for type_name, count in stats.by_type.items():
         type_table.add_row(type_name, str(count))
     console.print(type_table)
 
@@ -89,16 +89,16 @@ def format_stats(stats: dict) -> None:
     author_table = Table()
     author_table.add_column("Author", style="yellow")
     author_table.add_column("Count", style="cyan")
-    for author_name, count in stats["by_author"].items():
+    for author_name, count in stats.by_author.items():
         author_table.add_row(author_name, str(count))
     console.print(author_table)
 
     # Top Tags
-    if stats["top_tags"]:
+    if stats.top_tags:
         console.print("\n[bold]Top Tags:[/bold]")
         tag_table = Table()
         tag_table.add_column("Tag", style="blue")
         tag_table.add_column("Count", style="cyan")
-        for tag, count in stats["top_tags"].items():
+        for tag, count in stats.top_tags.items():
             tag_table.add_row(tag, str(count))
         console.print(tag_table)

@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
+from kamojiros.core.naming import make_note_id
 from kamojiros.core.time import now_jst
-from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
+from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportStats, ReportType
 
 if TYPE_CHECKING:
     from kamojiros.interfaces.reports import ReportRepository
@@ -29,9 +30,7 @@ class ReportService:
     ) -> Report:
         """新しいレポートを作成して保存する."""
         now = now_jst()
-        note_id = now.strftime(f"%Y-%m-%d-%H%M-{report_type.value}-{title[:20]}")
-        # note_idはファイル名に使うので安全な文字のみ
-        note_id = note_id.replace(" ", "-").replace("/", "-")
+        note_id = make_note_id(report_type, title)
 
         meta = ReportMeta(
             note_id=note_id,
@@ -119,37 +118,10 @@ class ReportService:
         # 新しい順にソート
         return sorted(results, key=lambda r: r.meta.updated_at, reverse=True)
 
-    def get_statistics(self, since: datetime | None = None) -> dict:
+    def get_statistics(self, since: datetime | None = None) -> ReportStats:
         """統計情報を取得する."""
         if since is None:
             since = now_jst() - timedelta(days=30)
 
         reports = self._report_repo.find_recent(since)
-
-        # 型別集計
-        type_counts: dict[str, int] = {}
-        for report in reports:
-            type_counts[report.meta.type.value] = type_counts.get(report.meta.type.value, 0) + 1
-
-        # 著者別集計
-        author_counts: dict[str, int] = {}
-        for report in reports:
-            author_counts[report.meta.author.value] = author_counts.get(report.meta.author.value, 0) + 1
-
-        # タグ別集計
-        tag_counts: dict[str, int] = {}
-        for report in reports:
-            for tag in report.meta.tags:
-                tag_counts[tag] = tag_counts.get(tag, 0) + 1
-
-        # タグを頻度順にソート
-        sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
-
-        return {
-            "total_count": len(reports),
-            "period_start": since.isoformat(),
-            "period_end": now_jst().isoformat(),
-            "by_type": type_counts,
-            "by_author": author_counts,
-            "top_tags": dict(sorted_tags[:10]),  # 上位10タグ
-        }
+        return ReportStats.from_reports(reports, period_start=since, period_end=now_jst())

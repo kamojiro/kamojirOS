@@ -1,11 +1,11 @@
-"""Kamomo 共通の Settings 基底クラス."""
+"""Kamojiros 共通の Settings 基底クラス."""
 
 from pydantic_settings import BaseSettings as PydanticBaseSettings
 from pydantic_settings import SettingsConfigDict
 
 
 class BaseSettings(PydanticBaseSettings):
-    """Kamomo 共通の Settings 基底クラス.
+    """Kamojiros 共通の Settings 基底クラス.
 
     - 環境変数プレフィックス: KAMOJIROS_
     - ネスト区切り: "__"

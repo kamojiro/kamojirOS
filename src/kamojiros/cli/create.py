@@ -12,7 +12,7 @@ from kamojiros.models import ReportAuthor, ReportType
 from kamojiros.services.report_service import ReportService
 
 
-def create(
+def create(  # noqa: C901
     title: str | None = typer.Option(None, "--title", "-t", help="Report title"),
     report_type: str | None = typer.Option(None, "--type", help="Report type (tech/paper/life/meta)"),
     body: str | None = typer.Option(None, "--body", "-b", help="Report body (markdown)"),
@@ -66,8 +66,11 @@ def create(
         console.print(f"[red]Error: Invalid type '{report_type}'. Use: tech, paper, life, or meta[/red]")
         raise typer.Exit(1) from None
 
-    # レポート作成
+    # レポート保存
     settings = Settings()
+    if settings.notes is None:
+        msg = "settings.notes must be set"
+        raise RuntimeError(msg)
     repo = MarkdownReportRepository(notes_repo_root=settings.notes.repo_root)
     service = ReportService(report_repo=repo)
 
