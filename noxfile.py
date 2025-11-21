@@ -62,3 +62,9 @@ def typecheck(session: nox.Session) -> None:
 def test(session: nox.Session) -> None:
     """Run tests with Pytest."""
     _uv_run(session, "pytest", "-q", *session.posargs)
+
+
+@nox.session(venv_backend="none")
+def spell_check(session: nox.Session) -> None:
+    """Run cspell via npx."""
+    session.run("npx", "cspell", "**", external=True)

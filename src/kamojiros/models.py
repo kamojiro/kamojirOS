@@ -88,3 +88,20 @@ class ReportStats(BaseModel):
             by_author=author_counts,
             top_tags=top_tags,
         )
+
+
+class ActivityType(StrEnum):
+    """アクティビティの種類."""
+
+    NOTE = "note"
+
+
+class Activity(BaseModel):
+    """外部サービスからのアクティビティ (Misskey Note等)."""
+
+    id: str
+    type: ActivityType
+    content: str
+    created_at: datetime
+    source_url: HttpUrl
+    raw_data: dict  # 元のJSONを保持

@@ -3,38 +3,49 @@
 from pathlib import Path  # noqa: TC003
 from typing import Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
+from pydantic_settings import BaseSettings as PydanticBaseSettings
+from pydantic_settings import SettingsConfigDict
 
 from kamojiros.config.base_settings import BaseSettings
 
 
 class NotesSettings(BaseModel):
-    """Kamojiros Notes (Git repo) 関連の設定."""
+    """Notesリポジトリの設定."""
 
     repo_root: Path
-    default_branch: str = "main"
 
 
 class SelfObserverSettings(BaseModel):
-    """self_observer エージェント固有の設定."""
+    """Self Observerの設定."""
 
-    enabled: bool = True
-    schedule_cron: str = "0 * * * *"  # 例: 毎時
+    timezone: str = "Asia/Tokyo"
 
 
 class TrackerSettings(BaseModel):
-    """tracker_api 関連の設定."""
+    """Trackerの設定."""
 
-    db_url: str = "sqlite:///kamojiros.db"
     base_url: str = "https://example.com"
 
 
+class MisskeySettings(PydanticBaseSettings):
+    """Misskey設定."""
+
+    url: str | None = None
+    token: str | None = None
+
+    model_config = SettingsConfigDict(env_prefix="MISSKEY_")
+
+
 class Settings(BaseSettings):
-    """アプリ全体の設定（エントリポイント用）."""
+    """全体設定."""
 
     notes: NotesSettings | None = None
-    self_observer: SelfObserverSettings = SelfObserverSettings()
-    tracker: TrackerSettings = TrackerSettings()
+    self_observer: SelfObserverSettings | None = None
+    tracker: TrackerSettings | None = None
+    misskey: MisskeySettings = Field(default_factory=MisskeySettings)
+
+    model_config = SettingsConfigDict(env_nested_delimiter="__")
 
     @field_validator("notes")
     @classmethod

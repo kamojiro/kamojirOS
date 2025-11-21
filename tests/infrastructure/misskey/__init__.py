@@ -1,0 +1,1 @@
+"""Misskey infrastructure tests."""
