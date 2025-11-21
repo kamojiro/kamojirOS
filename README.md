@@ -129,3 +129,10 @@ uv run ruff check --fix src tests
 # フォーマット
 uv run ruff format src tests
 ```
+
+### cspell
+
+```bash
+# 不要な cspell.json の要素を削除する
+npx cspell-check-unused-words@latest --fix
+```
