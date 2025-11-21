@@ -1,70 +1,133 @@
-"""Run all project checks and fixes via uv with a single `nox`."""
+"""Run all project checks and fixes via Nox + uv."""
+
+from __future__ import annotations
 
 import nox
+from nox import Session, options
 from nox.command import CommandFailed
+from nox_uv import session  # uv sync ベースの @session デコレータ
 
-# Run `all` when you just type `nox`
+# すべてのセッションで uv をバックエンドに使う
+options.default_venv_backend = "uv"
+
+# デフォルトで走らせるセッション
 nox.options.sessions = ["ci"]
 
-NOX_UV = "uv"
-DEFAULT_TARGETS = ("src", "tests")
+PYTHON_VERSIONS = ["3.14"]
+DEFAULT_TARGETS: tuple[str, ...] = ("src", "tests")
+
+# Node / cspell 関連
+NODE_VERSION = "24.5.0"
+CSPELL_TARGETS: tuple[str, ...] = (".",)  # 対象は cspell.json 側で細かく制御する前提
 
 
-def _targets(session: nox.Session) -> tuple[str, ...]:
+def _targets(session: Session) -> tuple[str, ...]:
     """Return CLI-selected targets or the default (src, tests)."""
     return tuple(session.posargs) if session.posargs else DEFAULT_TARGETS
 
 
-def _uv_run(session: nox.Session, *args: str) -> None:
-    """Run a command through uv."""
-    session.run(NOX_UV, "run", *args, external=True)
-
-
-@nox.session(venv_backend="none")
-def ci(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],  # dev グループを uv sync でインストール
+    tags=["ci"],
+)
+def ci(session: Session) -> None:
     """Fix, format, lint, typecheck, and test in one go."""
     targets = _targets(session)
-    _uv_run(session, "ruff", "check", "--fix", *targets)  # e.g., D202 を自動修正
-    _uv_run(session, "ruff", "format", *targets)  # 整形
-    _uv_run(session, "ruff", "check", *targets)  # Lint 確認
-    _uv_run(session, "pyright", *targets)  # 型チェック
+
+    # Ruff: autofix -> format -> lint
+    session.run("ruff", "check", "--fix", *targets)
+    session.run("ruff", "format", *targets)
+    session.run("ruff", "check", *targets)
+
+    # Pyright
+    session.run("pyright", *targets)
+
+    # Pytest
     try:
-        _uv_run(session, "pytest", "-q")
+        session.run("pytest", "-q")
     except CommandFailed:
-        session.warn("pytest is not installed; skipping tests. Add `pytest` to your dependencies to enable tests.")
+        session.warn(
+            "pytest is not installed; add it to the `dev` dependency group "
+            "to enable tests."
+        )
 
 
-@nox.session(venv_backend="none")
-def fix(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
+    tags=["format"],
+)
+def fix(session: Session) -> None:
     """Apply Ruff autofixes."""
-    _uv_run(session, "ruff", "check", "--fix", *_targets(session))
+    session.run("ruff", "check", "--fix", *_targets(session))
 
 
-@nox.session(venv_backend="none")
-def fmt(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
+    tags=["format"],
+)
+def fmt(session: Session) -> None:
     """Format code with Ruff formatter."""
-    _uv_run(session, "ruff", "format", *_targets(session))
+    session.run("ruff", "format", *_targets(session))
 
 
-@nox.session(venv_backend="none")
-def lint(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
+    tags=["lint"],
+)
+def lint(session: Session) -> None:
     """Run Ruff lint."""
-    _uv_run(session, "ruff", "check", *_targets(session))
+    session.run("ruff", "check", *_targets(session))
 
 
-@nox.session(venv_backend="none")
-def typecheck(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
+    tags=["typecheck"],
+)
+def typecheck(session: Session) -> None:
     """Run Pyright type checking."""
-    _uv_run(session, "pyright", *_targets(session))
+    session.run("pyright", *_targets(session))
 
 
-@nox.session(venv_backend="none")
-def test(session: nox.Session) -> None:
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
+    tags=["test"],
+)
+def test(session: Session) -> None:
     """Run tests with Pytest."""
-    _uv_run(session, "pytest", "-q", *session.posargs)
+    session.run("pytest", "-q", *session.posargs)
 
 
-@nox.session(venv_backend="none")
-def spell_check(session: nox.Session) -> None:
-    """Run cspell via npx."""
-    session.run("npx", "cspell", "**", external=True)
+@session(
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],  # dev グループに nodeenv が含まれている想定
+    tags=["spell", "ci"],
+)
+def spell_check(session: Session) -> None:
+    """Run cspell via nodeenv + npx inside the uv-managed venv."""
+    # 1. このセッションの venv (.nox/spell_check-3-14/...) に Node を結合
+    session.run(
+        "nodeenv",
+        "-p",  # --python-virtualenv: 現在の venv に Node を組み込む
+        "--prebuilt",
+        f"--node={NODE_VERSION}",
+    )
+
+    # 2. venv 内に入った npx + cspell を実行
+    #
+    #    - cspell 自体は package.json / node_modules 側で管理
+    #    - どのファイルを見るか / ignore は cspell.json 側で調整
+    #
+    session.run("npx", "cspell", *CSPELL_TARGETS)

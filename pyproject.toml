@@ -19,8 +19,11 @@ dependencies = [
 [dependency-groups]
 dev = [
     "bs4>=0.0.2",
+    "codespell>=2.4.1",
     "lxml>=6.0.2",
+    "nodeenv>=1.9.1",
     "nox>=2025.10.16",
+    "nox-uv>=0.6.3",
     "pyright>=1.1.407",
     "pytest>=9.0.0",
     "pytest-mock>=3.15.1",

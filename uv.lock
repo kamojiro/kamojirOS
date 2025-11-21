@@ -123,6 +123,15 @@ wheels = [
 ]
 
 [[package]]
+name = "codespell"
+version = "2.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/e0/709453393c0ea77d007d907dd436b3ee262e28b30995ea1aa36c6ffbccaf/codespell-2.4.1.tar.gz", hash = "sha256:299fcdcb09d23e81e35a671bbe746d5ad7e8385972e65dbb833a2eaac33c01e5", size = 344740, upload-time = "2025-01-28T18:52:39.411Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/01/b394922252051e97aab231d416c86da3d8a6d781eeadcdca1082867de64e/codespell-2.4.1-py3-none-any.whl", hash = "sha256:3dadafa67df7e4a3dbf51e0d7315061b80d265f9552ebd699b3dd6834b47e425", size = 344501, upload-time = "2025-01-28T18:52:37.057Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -288,8 +297,11 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "bs4" },
+    { name = "codespell" },
     { name = "lxml" },
+    { name = "nodeenv" },
     { name = "nox" },
+    { name = "nox-uv" },
     { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-mock" },
@@ -314,8 +326,11 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "bs4", specifier = ">=0.0.2" },
+    { name = "codespell", specifier = ">=2.4.1" },
     { name = "lxml", specifier = ">=6.0.2" },
+    { name = "nodeenv", specifier = ">=1.9.1" },
     { name = "nox", specifier = ">=2025.10.16" },
+    { name = "nox-uv", specifier = ">=0.6.3" },
     { name = "pyright", specifier = ">=1.1.407" },
     { name = "pytest", specifier = ">=9.0.0" },
     { name = "pytest-mock", specifier = ">=3.15.1" },
@@ -414,6 +429,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3d/3e/16440c5a2c1e867a862479cf7d11d05d0e0f2bb133de3921cb3ed6e37e57/nox-2025.10.16.tar.gz", hash = "sha256:fca1e7504384dbc91dddef3fec45d04572f23c882a87241e2c793b77fe1c9259", size = 4030246, upload-time = "2025-10-17T01:53:07.458Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6f/68/f4a9cd43dcd6cf9138e0fb39b3b8f17a82b121e8c26499d864e64c329cd0/nox-2025.10.16-py3-none-any.whl", hash = "sha256:b4ef28709d5fb0d964ccc987c8863f76ed860700fabd04ad557252df3562a7e5", size = 74405, upload-time = "2025-10-17T01:53:05.792Z" },
+]
+
+[[package]]
+name = "nox-uv"
+version = "0.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/af/ebc522c51facc3b7d26df1c5bc0b72baadb33ce4d539cf66758f22008f6c/nox_uv-0.6.3.tar.gz", hash = "sha256:7940dc4fed7326d00c9687d6dac65d625db21064dd02631af64cfdfa738e817b", size = 4992, upload-time = "2025-10-23T01:32:53.774Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/98/cc/32317fd187febd9b2c5dc6cad4d25b358bd3c289958a00b78d94dbddf481/nox_uv-0.6.3-py3-none-any.whl", hash = "sha256:650cc4dafcde281a77d0526ac9ff9c92de5cd7759ecc9fdbf98393e4ab24490f", size = 5315, upload-time = "2025-10-23T01:32:52.977Z" },
 ]
 
 [[package]]
