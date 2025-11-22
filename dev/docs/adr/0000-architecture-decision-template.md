@@ -113,7 +113,7 @@
 
 ## 8. 関連 ADR
 
-- ADR-0001: コアドメインモデル（Report / ResearchNote / Activity）の方針
-- ADR-0002: docs/ ディレクトリ構造と front matter スキーマ
-- ADR-0003: レポートホスティング戦略（本 ADR）
-- ADR-0004: InterestSnapshot / Task / Publication の設計方針
+- ADR-0003: コアドメインモデル（Report / ResearchNote / Activity）の方針
+- ADR-0004: docs/ ディレクトリ構造と front matter スキーマ
+- ADR-0005: レポートホスティング戦略（本 ADR）
+- ADR-0006: InterestSnapshot / Task / Publication の設計方針
