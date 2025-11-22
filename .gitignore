@@ -9,8 +9,10 @@ wheels/
 # Virtual environments
 .venv
 .env
-for_llm/
-materials/
+
+# Development docs
+dev/docs/for_llm/
+dev/docs/materials/
 
 # node
 package-lock.json
