@@ -4,8 +4,6 @@ from pathlib import Path  # noqa: TC003
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
-from pydantic_settings import BaseSettings as PydanticBaseSettings
-from pydantic_settings import SettingsConfigDict
 
 from kamojiros.config.base_settings import BaseSettings
 
@@ -28,32 +26,28 @@ class TrackerSettings(BaseModel):
     base_url: str = "https://example.com"
 
 
-class MisskeySettings(PydanticBaseSettings):
+class MisskeySettings(BaseSettings):
     """Misskey設定."""
 
     url: str | None = None
     token: str | None = None
 
-    model_config = SettingsConfigDict(env_prefix="MISSKEY_")
+
+class GeminiSettings(BaseModel):
+    """Google Gemini APIの設定."""
+
+    api_key: str
+    project_id: str
 
 
 class Settings(BaseSettings):
     """全体設定."""
 
-    notes: NotesSettings | None = None
+    notes: NotesSettings
     self_observer: SelfObserverSettings | None = None
     tracker: TrackerSettings | None = None
-    misskey: MisskeySettings = Field(default_factory=MisskeySettings)
-
-    model_config = SettingsConfigDict(env_nested_delimiter="__")
-
-    @field_validator("notes")
-    @classmethod
-    def _ensure_notes(cls, v: NotesSettings | None) -> NotesSettings:
-        if v is None:
-            msg = "KAMOJIROS_NOTES__REPO_ROOT is required"
-            raise ValueError(msg)
-        return v
+    # misskey: MisskeySettings = Field(default_factory=MisskeySettings) # noqa: ERA001
+    gemini: GeminiSettings
 
     def __init__(self, **values: Any) -> None:
         """環境変数 or 引数から設定を構築する.

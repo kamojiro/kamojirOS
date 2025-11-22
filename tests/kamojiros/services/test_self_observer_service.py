@@ -2,79 +2,94 @@
 
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
-from kamojiros.core.time import JST
-from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
-from kamojiros.services.self_observer_service import SelfObserverService
+from pydantic import HttpUrl
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
+from kamojiros.config.settings import SelfObserverSettings
+from kamojiros.models import Activity, ActivityType, Report, ReportAuthor, ReportType
+from kamojiros.services.self_observer_service import SelfObserverService
 
-def _make_report(
+
+def _make_activity(
     created_at: datetime,
-    report_type: ReportType = ReportType.TECH,
-    author: ReportAuthor = ReportAuthor.USER,
-    tags: list[str] | None = None,
-) -> Report:
-    """テスト用の Report を作成するヘルパー."""
-    if tags is None:
-        tags = []
-
-    meta = ReportMeta(
-        note_id="test-note",
-        title="Test Note",
+    content: str = "test note",
+) -> Activity:
+    """テスト用の Activity を作成するヘルパー."""
+    return Activity(
+        id="test-id",
+        type=ActivityType.NOTE,
+        content=content,
         created_at=created_at,
-        updated_at=created_at,
-        type=report_type,
-        author=author,
-        tags=tags,
-        source_urls=[],
+        source_url=HttpUrl("https://example.com/notes/test-id"),
+        raw_data={},
     )
-    return Report(meta=meta, body_markdown="body")
 
 
-def test_analyze_daily_activity_aggregates_correctly(mocker: MockerFixture) -> None:
-    """analyze_daily_activity が正しく集計してレポートを保存することを検証する."""
-    # Mock Repository
-    mock_repo = mocker.Mock()
+def test_observe_creates_report(mocker: MockerFixture) -> None:
+    """Observe が正しくレポートを作成・保存することを検証する."""
+    # Mock Dependencies
+    mock_report_service = mocker.Mock()
+    mock_activity_repo = mocker.Mock()
 
-    # 準備: find_recent が返すレポート
-    now = datetime.now(tz=JST)
-    reports = [
-        _make_report(now, report_type=ReportType.TECH, author=ReportAuthor.USER, tags=["python", "agent"]),
-        _make_report(now, report_type=ReportType.TECH, author=ReportAuthor.USER, tags=["python"]),
-        _make_report(now, report_type=ReportType.LIFE, author=ReportAuthor.USER, tags=["food"]),
+    # Prepare data
+    tz = ZoneInfo("Asia/Tokyo")
+    now = datetime(2025, 11, 20, 10, 0, 0, tzinfo=tz)
+
+    # Target date: yesterday
+    target_date = now - timedelta(days=1)
+    start_dt = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_dt = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    # Mock activities
+    activities = [
+        _make_activity(start_dt + timedelta(hours=10), "Morning note"),
+        _make_activity(start_dt + timedelta(hours=15), "Afternoon note"),
     ]
-    mock_repo.find_recent.return_value = reports
+    mock_activity_repo.get_activities.return_value = activities
 
-    # Service 実行
-    service = SelfObserverService(report_repo=mock_repo)
+    # Initialize Service
+    settings = SelfObserverSettings(timezone="Asia/Tokyo")
+    service = SelfObserverService(mock_report_service, mock_activity_repo, settings)
 
-    # 時間固定 (now_jst を mock)
-    mock_now = datetime(2025, 11, 20, 19, 0, 0, tzinfo=JST)
-    mocker.patch("kamojiros.services.self_observer_service.now_jst", return_value=mock_now)
+    # Execute
+    service.observe(target_date)
 
-    service.analyze_daily_activity()
+    # Verify get_activities called with correct range
+    mock_activity_repo.get_activities.assert_called_once_with(start_dt, end_dt)
 
-    # 検証: find_recent が呼ばれたか
-    expected_since = mock_now - timedelta(hours=24)
-    mock_repo.find_recent.assert_called_once_with(expected_since)
+    # Verify save_report called
+    mock_report_service.save_report.assert_called_once()
+    saved_report: Report = mock_report_service.save_report.call_args[0][0]
 
-    # 検証: save が呼ばれたか
-    mock_repo.save.assert_called_once()
-    saved_report: Report = mock_repo.save.call_args[0][0]
-
-    # Check saved report content
+    # Check report content
     assert saved_report.meta.type == ReportType.META
     assert saved_report.meta.author == ReportAuthor.SELF_OBSERVER
     assert "daily-report" in saved_report.meta.tags
+    assert f"Daily Report: {start_dt.strftime('%Y-%m-%d')}" == saved_report.meta.title
 
-    # 本文に集計結果が含まれているか
+    # Check body content
     body = saved_report.body_markdown
-    assert "Total Reports**: 3" in body
-    assert "tech**: 2" in body
-    assert "life**: 1" in body
-    assert "user**: 3" in body
-    assert "python**: 2" in body
-    assert "food**: 1" in body
+    assert "Morning note" in body
+    assert "Afternoon note" in body
+    assert start_dt.strftime("%Y-%m-%d") in body
+
+
+def test_observe_no_activities(mocker: MockerFixture) -> None:
+    """活動がない場合でもレポートが作成されることを検証する."""
+    mock_report_service = mocker.Mock()
+    mock_activity_repo = mocker.Mock()
+    mock_activity_repo.get_activities.return_value = []
+
+    settings = SelfObserverSettings(timezone="Asia/Tokyo")
+    service = SelfObserverService(mock_report_service, mock_activity_repo, settings)
+
+    target_date = datetime(2025, 11, 19, tzinfo=ZoneInfo("Asia/Tokyo"))
+    service.observe(target_date)
+
+    mock_report_service.save_report.assert_called_once()
+    saved_report = mock_report_service.save_report.call_args[0][0]
+    assert "活動記録はありませんでした" in saved_report.body_markdown

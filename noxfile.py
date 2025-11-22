@@ -48,10 +48,7 @@ def ci(session: Session) -> None:
     try:
         session.run("pytest", "-q")
     except CommandFailed:
-        session.warn(
-            "pytest is not installed; add it to the `dev` dependency group "
-            "to enable tests."
-        )
+        session.warn("pytest is not installed; add it to the `dev` dependency group to enable tests.")
 
 
 @session(
@@ -106,7 +103,13 @@ def typecheck(session: Session) -> None:
 )
 def test(session: Session) -> None:
     """Run tests with Pytest."""
-    session.run("pytest", "-q", *session.posargs)
+    args = list(session.posargs)
+
+    # すでに -m が明示されている場合はそのまま（ユーザー指定を優先）
+    has_m = any(a == "-m" or a.startswith("-m") for a in args)
+    if not has_m:
+        args = ["-m", "not gemini_required", *args]
+    session.run("pytest", "-q", *args)
 
 
 @session(

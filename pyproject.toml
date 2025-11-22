@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.121.3",
+    "google-cloud-aiplatform>=1.128.0",
+    "google-genai>=1.52.0",
     "httpx>=0.28.1",
     "pydantic>=2.12.4",
     "pydantic-settings>=2.12.0",
@@ -79,3 +81,6 @@ skip-magic-trailing-comma = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
+markers = [
+  "gemini_required: mark test as requiring Gemini API access",
+]

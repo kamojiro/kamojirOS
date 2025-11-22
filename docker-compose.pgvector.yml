@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  pgvector:
+    image: pgvector/pgvector:pg18
+    container_name: kamojiros-pgvector
+    environment:
+      POSTGRES_USER: ${KAMOJIROS_POSTGRES_USER:-kamojiros}
+      POSTGRES_PASSWORD: ${KAMOJIROS_POSTGRES_PASSWORD:-kamojiros}
+      POSTGRES_DB: ${KAMOJIROS_POSTGRES_DB:-kamojiros}
+    ports:
+      - "${KAMOJIROS_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./postgres-data:${KAMOJIROS_POSTGRES_VOLUME:-/var/lib/postgresql/data}
+

@@ -1,79 +1,90 @@
-"""self_observer_service モジュール."""
+"""Self Observer Service."""
 
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
+from kamojiros.config.settings import SelfObserverSettings
 from kamojiros.core.naming import make_note_id
-from kamojiros.core.time import now_jst
-from kamojiros.models import (
-    Report,
-    ReportAuthor,
-    ReportMeta,
-    ReportStats,
-    ReportType,
-)
+from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
 
 if TYPE_CHECKING:
-    from kamojiros.interfaces.reports import ReportRepository
+    from kamojiros.infrastructure.files.activity_repository import ActivityRepository
+    from kamojiros.services.report_service import ReportService
 
 
 class SelfObserverService:
-    """self_observer 用のサービス."""
+    """自己観察エージェントのサービス."""
 
-    def __init__(self, report_repo: ReportRepository) -> None:
-        """初期化."""
-        self._report_repo = report_repo
+    def __init__(
+        self,
+        report_service: ReportService,
+        activity_repository: ActivityRepository,
+        settings: SelfObserverSettings | None = None,
+    ) -> None:
+        """Initialize SelfObserverService."""
+        self.report_service = report_service
+        self.activity_repository = activity_repository
+        self.settings = settings or SelfObserverSettings()
+        self.tz = ZoneInfo(self.settings.timezone)
 
-    def analyze_daily_activity(self) -> Report:
-        """直近24時間の活動を分析し、METAレポートを作成する."""
-        now = now_jst()
-        since = now - timedelta(hours=24)
+    def observe(self, target_date: datetime | None = None) -> Report:
+        """指定日の活動を収集・分析してレポートを作成する."""
+        if target_date is None:
+            # デフォルトは「昨日」のレポートを作成
+            now = datetime.now(self.tz)
+            target_date = now - timedelta(days=1)
 
-        # 直近のレポートを取得
-        recent_reports = self._report_repo.find_recent(since)
+        # 1日の範囲を設定 (00:00:00 - 23:59:59)
+        start_dt = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_dt = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        # 集計
-        stats = ReportStats.from_reports(recent_reports, period_start=since, period_end=now)
+        # 1. 活動履歴の収集
+        activities = self.activity_repository.get_activities(start_dt, end_dt)
 
-        # レポート本文作成
-        lines = [
-            f"# Daily Activity Report ({now.strftime('%Y-%m-%d')})",
-            "",
-            f"**集計期間**: {since.strftime('%Y-%m-%d %H:%M')} ~ {now.strftime('%H:%M')}",
-            "",
-            "## Summary",
-            "",
-            f"- **Total Reports**: {stats.total_count}",
-            "",
-            "### By Type",
-            "",
-        ]
-        for t, c in sorted(stats.by_type.items(), key=lambda x: x[1], reverse=True):
-            lines.append(f"- **{t}**: {c}")
+        # 2. レポート本文の生成
+        title = f"Daily Report: {start_dt.strftime('%Y-%m-%d')}"
+        body = self._generate_report_body(start_dt, activities)
 
-        lines.extend(["", "### By Author", ""])
-        for a, c in sorted(stats.by_author.items(), key=lambda x: x[1], reverse=True):
-            lines.append(f"- **{a}**: {c}")
+        # 3. レポート保存
+        note_id = make_note_id(ReportType.META, f"daily-{start_dt.strftime('%Y-%m-%d')}")
 
-        lines.extend(["", "### Top Tags", ""])
-        for tag, c in sorted(stats.top_tags.items(), key=lambda x: x[1], reverse=True):
-            lines.append(f"- **{tag}**: {c}")
-
-        lines.append("")
-        body = "\n".join(lines)
-
-        # 保存
-        note_id = make_note_id(ReportType.META, "daily-report")
         meta = ReportMeta(
             note_id=note_id,
-            title=f"Daily Activity Report {now.strftime('%Y-%m-%d')}",
-            created_at=now,
-            updated_at=now,
+            title=title,
+            created_at=datetime.now(self.tz),
+            updated_at=datetime.now(self.tz),
             type=ReportType.META,
             author=ReportAuthor.SELF_OBSERVER,
-            tags=["daily-report", "meta"],
+            tags=["daily-report", "self-observer"],
         )
 
         report = Report(meta=meta, body_markdown=body)
-        self._report_repo.save(report)
+        self.report_service.save_report(report)
+
         return report
+
+    def _generate_report_body(self, date: datetime, activities: list) -> str:
+        """レポート本文を生成する."""
+        lines = [
+            f"# {date.strftime('%Y-%m-%d')} の活動報告",
+            "",
+            "## 活動ログ (Misskey)",
+            "",
+        ]
+
+        if not activities:
+            lines.append("活動記録はありませんでした。")
+        else:
+            for act in activities:
+                time_str = act.created_at.astimezone(self.tz).strftime("%H:%M")
+                content = act.content.replace("\n", " ")[:100]  # 1行にまとめる
+                lines.append(f"- `{time_str}` {content}")
+
+        lines.append("")
+        lines.append("## 所感")
+        lines.append("(ここにエージェントの分析が入る予定)")
+
+        return "\n".join(lines)

@@ -136,3 +136,9 @@ uv run ruff format src tests
 # 不要な cspell.json の要素を削除する
 npx cspell-check-unused-words@latest --fix
 ```
+
+### PostgreSQL
+
+```bash
+docker compose -f docker-compose.pgvector.yml up -d
+```

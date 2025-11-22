@@ -47,6 +47,10 @@ class ReportService:
         self._report_repo.save(report)
         return report
 
+    def save_report(self, report: Report) -> None:
+        """既存のレポートオブジェクトを保存する."""
+        self._report_repo.save(report)
+
     def list_reports(
         self,
         limit: int | None = None,

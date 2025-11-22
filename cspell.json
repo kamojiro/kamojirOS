@@ -2,15 +2,18 @@
   "version": "0.2",
   "language": "en",
   "words": [
-    "ingestor",
-    "KAMOJIROS",
-    "pytest",
-    "Misskey",
-    "misskey",
     "FINDME",
+    "genai",
+    "ingestor",
     "kamojiros",
+    "KAMOJIROS",
+    "misskey",
+    "Misskey",
+    "pgvector",
+    "pytest",
+    "rauthor",
     "rtype",
-    "rauthor"
+    "vertexai"
   ],
   "files": ["README.md", "src/**/*.py", "tests/**/*.py"],
   "ignorePaths": [
