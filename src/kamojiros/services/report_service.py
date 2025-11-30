@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from kamojiros.core.naming import make_note_id
-from kamojiros.core.time import now_jst
+from kamojiros.utils.naming import make_note_id
+from kamojiros.utils.time import now_jst
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportStats, ReportType
 
 if TYPE_CHECKING:

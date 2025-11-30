@@ -1,15 +1,14 @@
 """search コマンド - レポートをキーワード検索."""
 
-from __future__ import annotations
-
 import typer
 
-from kamojiros.cli.formatters import console, format_report_table
+from kamojiros.cli.report import app
+from kamojiros.cli.report.formatters import console, format_report_table
 from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.services.report_service import ReportService
 
-
+@app.command("search")
 def search(
     keyword: str = typer.Argument(..., help="Search keyword"),
     title_only: bool = typer.Option(False, "--title-only", help="Search only in titles"),

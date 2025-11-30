@@ -1,17 +1,17 @@
 """create コマンド - 新しいレポートを作成."""
 
-from __future__ import annotations
-
 import typer
 from rich.prompt import Prompt
 
-from kamojiros.cli.formatters import console
+from kamojiros.cli.report import app
+from kamojiros.cli.report.formatters import console
 from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.models import ReportAuthor, ReportType
 from kamojiros.services.report_service import ReportService
 
 
+@app.command("create")
 def create(  # noqa: C901
     title: str | None = typer.Option(None, "--title", "-t", help="Report title"),
     report_type: str | None = typer.Option(None, "--type", help="Report type (tech/paper/life/meta)"),

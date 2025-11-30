@@ -2,9 +2,16 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "adrop",
+    "aembed",
+    "afetch",
+    "ainit",
+    "ainvoke",
     "FINDME",
     "genai",
     "ingestor",
+    "kamojiro",
+    "kamojiroid",
     "kamojiros",
     "KAMOJIROS",
     "misskey",
@@ -12,10 +19,17 @@
     "pgvector",
     "pytest",
     "rauthor",
+    "renote",
     "rtype",
+    "TIMESTAMPTZ",
+    "vectorstore",
     "vertexai"
   ],
-  "files": ["README.md", "src/**/*.py", "tests/**/*.py"],
+  "files": [
+    "README.md",
+    "src/**/*.py",
+    "tests/**/*.py"
+  ],
   "ignorePaths": [
     ".env",
     ".venv/**",

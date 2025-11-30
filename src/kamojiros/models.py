@@ -2,8 +2,12 @@
 
 from datetime import datetime  # noqa: TC003
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, HttpUrl
+from pydantic import AnyHttpUrl, BaseModel, Field, HttpUrl
+
+if TYPE_CHECKING:
+    from langchain_core import Document
 
 
 class ReportType(StrEnum):
@@ -90,18 +94,80 @@ class ReportStats(BaseModel):
         )
 
 
+class ActivitySource(StrEnum):
+    """Activityの発生元サービス."""
+
+    MISSKEY = "misskey"
+
+
 class ActivityType(StrEnum):
-    """アクティビティの種類."""
+    """Activityの種別."""
 
     NOTE = "note"
+    REPLY = "reply"
+    RENOTE = "renote"
 
 
 class Activity(BaseModel):
-    """外部サービスからのアクティビティ (Misskey Note等)."""
+    """外部サービスで起きたイベント（Misskey Note 等）."""
 
-    id: str
+    id: str  # 内部ID（ULID/UUIDv7など）※今は note["id"] でもOK
+    source: ActivitySource  # "misskey"
+    source_id: str  # Misskey の note.id（= raw_data["id"]）
+    source_url: AnyHttpUrl
     type: ActivityType
-    content: str
+
     created_at: datetime
-    source_url: HttpUrl
-    raw_data: dict  # 元のJSONを保持
+
+    author_id: str
+    author_username: str
+    author_host: str | None = None
+
+    content: str
+    urls: list[AnyHttpUrl] = Field(..., default_factory=list)
+
+    reply_to_source_id: str | None = None
+    renote_source_id: str | None = None
+
+    raw_data: dict | None  # Misskey の生 JSON（トラブルシュート・再インデックス用）
+
+    @classmethod
+    def from_langchain_doc(cls, doc: Document) -> IndexedActivity:  # type: ignore[name-defined]
+        m = doc.metadata
+
+        # JSON 側から復元
+        urls_raw = m.get("urls") or []
+        urls = [AnyHttpUrl(url) for url in urls_raw]  # 雑に書いてるけど実際は TypeAdapter 使う方が安全
+
+        known_keys = {
+            "source",
+            "activity_id",
+            "source_id",
+            "source_url",
+            "activity_type",
+            "author_id",
+            "author_username",
+            "author_host",
+            "created_at",
+            "reply_to_source_id",
+            "renote_source_id",
+            "urls",
+        }
+        extra = {k: v for k, v in m.items() if k not in known_keys}
+
+        return cls(
+            id=m["activity_id"],
+            source=ActivitySource(m["source"]),
+            source_id=m["source_id"],
+            source_url=m["source_url"],
+            type=ActivityType(m["activity_type"]),
+            created_at=m["created_at"],
+            author_id=m["author_id"],
+            author_username=m["author_username"],
+            author_host=m.get("author_host"),
+            content=doc.page_content,
+            urls=urls,
+            reply_to_source_id=m.get("reply_to_source_id"),
+            renote_source_id=m.get("renote_source_id"),
+            extra_metadata=extra,
+        )

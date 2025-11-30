@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import typer
 
-from kamojiros.cli.create import create
-from kamojiros.cli.list import list_reports
-from kamojiros.cli.search import search
-from kamojiros.cli.stats import stats
+from kamojiros.cli.activity import app as activity_app
+from kamojiros.cli.report import app as report_app
 
 app = typer.Typer(
     name="kamojiros",
@@ -16,10 +14,8 @@ app = typer.Typer(
 )
 
 # コマンド登録
-app.command(name="create", help="Create a new report")(create)
-app.command(name="list", help="List reports")(list_reports)
-app.command(name="search", help="Search reports by keyword")(search)
-app.command(name="stats", help="Show statistics")(stats)
+app.add_typer(report_app, name="report")
+app.add_typer(activity_app, name="activity")
 
 
 def main() -> None:

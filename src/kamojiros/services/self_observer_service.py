@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from kamojiros.config.settings import SelfObserverSettings
-from kamojiros.core.naming import make_note_id
+from kamojiros.utils.naming import make_note_id
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
 
 if TYPE_CHECKING:

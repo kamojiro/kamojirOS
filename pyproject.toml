@@ -9,10 +9,15 @@ dependencies = [
     "google-cloud-aiplatform>=1.128.0",
     "google-genai>=1.52.0",
     "httpx>=0.28.1",
+    "langchain>=1.0.8",
+    "langchain-core>=1.1.0",
+    "langchain-google-genai>=3.1.0",
+    "langchain-postgres>=0.0.16",
     "pydantic>=2.12.4",
     "pydantic-settings>=2.12.0",
     "pyyaml>=6.0.3",
     "rich>=14.2.0",
+    "sqlalchemy>=2.0.44",
     "sqlmodel>=0.0.27",
     "typer>=0.20.0",
     "uvicorn>=0.38.0",
@@ -28,6 +33,7 @@ dev = [
     "nox-uv>=0.6.3",
     "pyright>=1.1.407",
     "pytest>=9.0.0",
+    "pytest-asyncio>=1.3.0",
     "pytest-mock>=3.15.1",
     "requests>=2.32.5",
     "ruff>=0.14.4",
@@ -82,5 +88,11 @@ skip-magic-trailing-comma = false
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
 markers = [
+  "postgres_required: mark test as requiring PostgreSQL instance.",
   "gemini_required: mark test as requiring Gemini API access",
+  "misskey_required: mark test as requiring Misskey access",
+]
+filterwarnings = [
+  # google.genai.types から出る DeprecationWarning を全部無視
+  "ignore::DeprecationWarning:google.genai.types",
 ]

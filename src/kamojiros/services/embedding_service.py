@@ -65,6 +65,7 @@ class EmbeddingService:
     def _embed(self, texts: list[str], embedding_config: EmbedContentConfig) -> list[list[float]]:
         """Generate embeddings for a list of texts."""
         return self._embed_vertexai(texts, embedding_config)
+        # MEMO(kamojiro): genai はうまく動作しなかった
         try:
             return self._embed_dev(texts, embedding_config)
         except ResourceExhausted as e:

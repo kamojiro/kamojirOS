@@ -1,7 +1,7 @@
 """命名規則に関するヘルパー関数群."""
 
-from kamojiros.core.time import now_jst
 from kamojiros.models import ReportType  # noqa: TC001
+from kamojiros.utils.time import now_jst
 
 
 def make_note_id(report_type: ReportType, slug: str) -> str:
