@@ -22,8 +22,8 @@ def search(
     async def _run() -> None:
         docs = await search_misskey_activity(
             query,
-            days=days,
-            top_k=None if top_k <= 0 else top_k,
+            days=days or 7,
+            top_k=top_k if top_k > 0 else 10,
         )
         for doc in docs:
             typer.echo(doc.content[:40])

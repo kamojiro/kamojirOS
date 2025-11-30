@@ -54,7 +54,9 @@ class GeminiEmbeddings(Embeddings):
 
     def _to_embedding_vectors(self, embedding_response: EmbedContentResponse) -> list[list[float]]:
         """Convert EmbedContentResponse to a list of embedding vectors."""
-        return [embedding.values for embedding in embedding_response.embeddings]
+        if not embedding_response.embeddings:
+            return []
+        return [embedding.values for embedding in embedding_response.embeddings if embedding.values is not None]
 
     def _embed_sync(
         self,

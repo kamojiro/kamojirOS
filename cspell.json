@@ -7,6 +7,7 @@
     "afetch",
     "ainit",
     "ainvoke",
+    "autouse",
     "FINDME",
     "genai",
     "ingestor",
@@ -36,10 +37,16 @@
     "__pycache__/**",
     ".ruff_cache/**",
     ".pytest_cache/**",
+    "cspell.json",
     "dist/**",
+    "dev/**",
     "build/**",
     "materials",
     "for_llm",
-    "src/kamojiros.db"
+    "src/kamojiros.db",
+    "samples/**",
+    "rest/**",
+    "noxfile.py",
+    "pyproject.toml"
   ]
 }

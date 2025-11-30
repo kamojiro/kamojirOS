@@ -11,7 +11,6 @@ from kamojiros.infrastructure.rag.activity_store import (
 )
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
 from kamojiros.infrastructure.state.file_kv_store import FileKeyValueStore
-from kamojiros.models import Activity
 from kamojiros.services.misskey.activity_sync_service import MisskeyActivitySyncService
 from kamojiros.services.rag.activity_ingest_service import ActivityIngestService
 from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveService
@@ -19,6 +18,8 @@ from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveSer
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
     from langchain_postgres import PGVectorStore
+
+    from kamojiros.models import Activity
 
 
 @dataclass

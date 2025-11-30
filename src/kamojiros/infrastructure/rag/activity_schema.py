@@ -22,11 +22,11 @@ class ActivityIndexSchema:
 
     # 型付きメタデータ列
     metadata_columns: tuple[Column, ...] = (
-        Column("source", "TEXT"),           # Activity.source
-        Column("activity_id", "TEXT"),      # Activity.id
-        Column("source_id", "TEXT"),        # Activity.source_id
-        Column("source_url", "TEXT"),       # Activity.source_url
-        Column("activity_type", "TEXT"),    # Activity.type
+        Column("source", "TEXT"),  # Activity.source
+        Column("activity_id", "TEXT"),  # Activity.id
+        Column("source_id", "TEXT"),  # Activity.source_id
+        Column("source_url", "TEXT"),  # Activity.source_url
+        Column("activity_type", "TEXT"),  # Activity.type
         Column("author_id", "TEXT"),  # 発言者ID
         Column("author_username", "TEXT"),  # @username
         Column("author_host", "TEXT"),  # misskey.io など
@@ -36,7 +36,6 @@ class ActivityIndexSchema:
     )
 
     metadata_json_column: str = "metadata"
-
 
 
 ACTIVITY_INDEX_SCHEMA = ActivityIndexSchema()

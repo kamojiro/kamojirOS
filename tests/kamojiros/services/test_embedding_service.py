@@ -48,6 +48,7 @@ class TestEmbeddingService:
         ],
     )
     @pytest.mark.gemini_required
+    @pytest.mark.skip(reason="Requires real credentials")
     def test_vertexai_client_embedding(self, embedding_config: EmbedContentConfig) -> None:
         """Test embedding using the dev client."""
         # arrange

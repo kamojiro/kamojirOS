@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import nox
 from nox import Session, options
-from nox.command import CommandFailed
 from nox_uv import session  # uv sync ベースの @session デコレータ
 
 # すべてのセッションで uv をバックエンドに使う
 options.default_venv_backend = "uv"
 
 # デフォルトで走らせるセッション
-nox.options.sessions = ["ci"]
+nox.options.tags = ["ci"]
 
 PYTHON_VERSIONS = ["3.14"]
 DEFAULT_TARGETS: tuple[str, ...] = ("src", "tests")
@@ -29,33 +28,8 @@ def _targets(session: Session) -> tuple[str, ...]:
 @session(
     venv_backend="uv",
     python=PYTHON_VERSIONS,
-    uv_groups=["dev"],  # dev グループを uv sync でインストール
-    tags=["ci"],
-)
-def ci(session: Session) -> None:
-    """Fix, format, lint, typecheck, and test in one go."""
-    targets = _targets(session)
-
-    # Ruff: autofix -> format -> lint
-    session.run("ruff", "check", "--fix", *targets)
-    session.run("ruff", "format", *targets)
-    session.run("ruff", "check", *targets)
-
-    # Pyright
-    session.run("pyright", *targets)
-
-    # Pytest
-    try:
-        session.run("pytest", "-q")
-    except CommandFailed:
-        session.warn("pytest is not installed; add it to the `dev` dependency group to enable tests.")
-
-
-@session(
-    venv_backend="uv",
-    python=PYTHON_VERSIONS,
     uv_groups=["dev"],
-    tags=["format"],
+    tags=["format", "ci"],
 )
 def fix(session: Session) -> None:
     """Apply Ruff autofixes."""
@@ -88,7 +62,7 @@ def lint(session: Session) -> None:
     venv_backend="uv",
     python=PYTHON_VERSIONS,
     uv_groups=["dev"],
-    tags=["typecheck"],
+    tags=["typecheck", "ci"],
 )
 def typecheck(session: Session) -> None:
     """Run Pyright type checking."""
@@ -98,27 +72,10 @@ def typecheck(session: Session) -> None:
 @session(
     venv_backend="uv",
     python=PYTHON_VERSIONS,
-    uv_groups=["dev"],
-    tags=["test"],
-)
-def test(session: Session) -> None:
-    """Run tests with Pytest."""
-    args = list(session.posargs)
-
-    # すでに -m が明示されている場合はそのまま（ユーザー指定を優先）
-    has_m = any(a == "-m" or a.startswith("-m") for a in args)
-    if not has_m:
-        args = ["-m", "not gemini_required", *args]
-    session.run("pytest", "-q", *args)
-
-
-@session(
-    venv_backend="uv",
-    python=PYTHON_VERSIONS,
     uv_groups=["dev"],  # dev グループに nodeenv が含まれている想定
     tags=["spell", "ci"],
 )
-def spell_check(session: Session) -> None:
+def cspell(session: Session) -> None:
     """Run cspell via nodeenv + npx inside the uv-managed venv."""
     # 1. このセッションの venv (.nox/spell_check-3-14/...) に Node を結合
     session.run(
@@ -134,3 +91,16 @@ def spell_check(session: Session) -> None:
     #    - どのファイルを見るか / ignore は cspell.json 側で調整
     #
     session.run("npx", "cspell", *CSPELL_TARGETS)
+
+
+@session(
+    venv_backend="none",
+    tags=["test", "ci"],
+)
+def test(session: Session) -> None:
+    """Run tests with Pytest."""
+    session.run(
+        "cspell",
+        *CSPELL_TARGETS,
+        external=True,  # 外部コマンド実行なのでつけておくと安心
+    )

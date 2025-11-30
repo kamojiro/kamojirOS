@@ -26,9 +26,17 @@ jobs:
 
       - name: Sync project (install deps)
         run: uv sync --all-extras --dev
+        
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install cspell globally
+        run: npm install -g cspell
 
       - name: Run nox ci session
         env:
           # src/kamojiros を import できるようにしておくと安心
           PYTHONPATH: ${{ github.workspace }}
-        run: uv run nox -s ci
+        run: uv run nox -t ci

@@ -1,14 +1,13 @@
 """Self Observer Service."""
 
-from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from kamojiros.config.settings import SelfObserverSettings
-from kamojiros.utils.naming import make_note_id
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
+from kamojiros.utils.naming import make_note_id
 
 if TYPE_CHECKING:
     from kamojiros.infrastructure.files.activity_repository import ActivityRepository

@@ -1,6 +1,5 @@
 """CLI コマンドのテスト."""
 
-from __future__ import annotations
 
 from pathlib import Path  # noqa: TC003
 from typing import TYPE_CHECKING
@@ -20,41 +19,39 @@ def test_help_command() -> None:
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     assert "Kamojiros" in result.stdout
-    assert "create" in result.stdout
-    assert "list" in result.stdout
-    assert "search" in result.stdout
-    assert "stats" in result.stdout
+    assert "report" in result.stdout
+    assert "activity" in result.stdout
 
 
 def test_create_help() -> None:
     """Create コマンドのヘルプが表示されることを確認."""
-    result = runner.invoke(app, ["create", "--help"])
+    result = runner.invoke(app, ["report", "create", "--help"])
     assert result.exit_code == 0
-    assert "Create a new report" in result.stdout
+    assert "新しいレポートを作成する" in result.stdout
     assert "--title" in result.stdout
     assert "--type" in result.stdout
 
 
 def test_list_help() -> None:
     """List コマンドのヘルプが表示されることを確認."""
-    result = runner.invoke(app, ["list", "--help"])
+    result = runner.invoke(app, ["report", "list", "--help"])
     assert result.exit_code == 0
-    assert "List reports" in result.stdout
+    assert "レポート一覧を表示する" in result.stdout
     assert "--limit" in result.stdout
 
 
 def test_search_help() -> None:
     """Search コマンドのヘルプが表示されることを確認."""
-    result = runner.invoke(app, ["search", "--help"])
+    result = runner.invoke(app, ["report", "search", "--help"])
     assert result.exit_code == 0
-    assert "Search reports" in result.stdout
+    assert "キーワードでレポートを検索する" in result.stdout
 
 
 def test_stats_help() -> None:
     """Stats コマンドのヘルプが表示されることを確認."""
-    result = runner.invoke(app, ["stats", "--help"])
+    result = runner.invoke(app, ["report", "stats", "--help"])
     assert result.exit_code == 0
-    assert "Show statistics" in result.stdout
+    assert "レポートの統計情報を表示する" in result.stdout
 
 
 def test_create_command_non_interactive(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,6 +62,7 @@ def test_create_command_non_interactive(tmp_path: Path, monkeypatch: pytest.Monk
     result = runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",  # non-interactive
             "--title",
@@ -94,6 +92,7 @@ def test_list_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",
             "--title",
@@ -106,7 +105,7 @@ def test_list_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     # list コマンド実行
-    result = runner.invoke(app, ["list", "--limit", "5"])
+    result = runner.invoke(app, ["report", "list", "--limit", "5"])
 
     assert result.exit_code == 0
     assert "Reports" in result.stdout or "Test Report" in result.stdout
@@ -120,6 +119,7 @@ def test_search_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
     runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",
             "--title",
@@ -132,7 +132,7 @@ def test_search_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
     )
 
     # search コマンド実行
-    result = runner.invoke(app, ["search", "FINDME"])
+    result = runner.invoke(app, ["report", "search", "FINDME"])
 
     assert result.exit_code == 0
     assert "FINDME" in result.stdout or "Searchable Report" in result.stdout
@@ -146,6 +146,7 @@ def test_stats_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",
             "--title",
@@ -158,7 +159,7 @@ def test_stats_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     # stats コマンド実行
-    result = runner.invoke(app, ["stats"])
+    result = runner.invoke(app, ["report", "stats"])
 
     assert result.exit_code == 0
     assert "Statistics" in result.stdout
@@ -170,6 +171,7 @@ def test_create_missing_required_args() -> None:
     result = runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",
             "--title",
@@ -190,6 +192,7 @@ def test_list_with_json_format(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     runner.invoke(
         app,
         [
+            "report",
             "create",
             "-I",
             "--title",
@@ -202,7 +205,7 @@ def test_list_with_json_format(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     )
 
     # JSON形式でlist
-    result = runner.invoke(app, ["list", "--json", "--limit", "1"])
+    result = runner.invoke(app, ["report", "list", "--json", "--limit", "1"])
 
     assert result.exit_code == 0
     # JSON形式の出力を確認（簡易チェック）

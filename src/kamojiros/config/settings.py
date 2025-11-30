@@ -26,6 +26,7 @@ class GeminiSettings(BaseModel):
     """Google Gemini APIの設定."""
 
     project_id: str
+    api_key: str
 
 
 class PostgreSQLSettings(BaseModel):
@@ -38,10 +39,17 @@ class PostgreSQLSettings(BaseModel):
     password: str
     activity_index_name: str | None = None
 
+
 class StateStoreSettings(BaseModel):
     """State Storeの設定."""
 
     base_dir: Path = Field(default=Path("./.kamojiros"))
+
+
+class SelfObserverSettings(BaseModel):
+    """自己観察エージェントの設定."""
+
+    timezone: str = "Asia/Tokyo"
 
 
 class Settings(BaseSettings):
@@ -52,6 +60,7 @@ class Settings(BaseSettings):
     gemini: GeminiSettings
     postgres: PostgreSQLSettings
     state_store: StateStoreSettings = Field(default_factory=StateStoreSettings)
+    self_observer: SelfObserverSettings = Field(default_factory=SelfObserverSettings)
 
     def __init__(self, **values: Any) -> None:
         """環境変数 or 引数から設定を構築する.

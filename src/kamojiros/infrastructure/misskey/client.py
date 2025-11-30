@@ -6,11 +6,13 @@ from functools import partial
 from typing import TYPE_CHECKING, Self
 
 import httpx
-
-from kamojiros.models import Activity, ActivitySource, ActivityType
 from pydantic import AnyHttpUrl
 
+from kamojiros.models import Activity, ActivitySource, ActivityType
+
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
     from kamojiros.config.settings import MisskeySettings
 
 
@@ -82,7 +84,7 @@ class MisskeyClient:
         *,
         since_id: str | None = None,
         page_size: int = 100,
-    ) -> asyncio.Generator[list[Activity], asyncio.Any, None]:
+    ) -> AsyncGenerator[list[Activity]]:
         """since_id 以降のノートを新しい順にすべて返す.
 
         - since_id is None → 全履歴（フル同期）

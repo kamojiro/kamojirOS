@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from google.genai import Client  # noqa: F401
 
 
+@pytest.mark.skip(reason="Requires real credentials")
 class TestGeminiEmbeddings:
     """Tests for GeminiEmbeddings."""
 

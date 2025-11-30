@@ -29,7 +29,7 @@ async def ainit_activity_index_table(pg_settings: PostgreSQLSettings) -> None:
             id_column=ACTIVITY_INDEX_SCHEMA.id_column,
             content_column=ACTIVITY_INDEX_SCHEMA.content_column,
             embedding_column=ACTIVITY_INDEX_SCHEMA.embedding_column,
-            metadata_columns=ACTIVITY_INDEX_SCHEMA.metadata_columns,
+            metadata_columns=list(ACTIVITY_INDEX_SCHEMA.metadata_columns),
             metadata_json_column=ACTIVITY_INDEX_SCHEMA.metadata_json_column,
         )
     except ProgrammingError as e:

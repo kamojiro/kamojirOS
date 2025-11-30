@@ -1,6 +1,5 @@
 """Kamojiros Notes (Git repo) に Report を保存する実装を定義するモジュール."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta

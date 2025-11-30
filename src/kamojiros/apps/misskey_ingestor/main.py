@@ -13,20 +13,20 @@ console = Console()
 def run() -> None:
     """Misskey Ingestor execution."""
     settings = Settings()
-    if not settings.misskey or not settings.misskey.url:
-        console.print("[red]Misskey URL is not configured.[/red]")
+    if not settings.misskey or not settings.misskey.host:
+        console.print("[red]Misskey host is not configured.[/red]")
         return
 
-    client = MisskeyClient(url=settings.misskey.url, token=settings.misskey.token)
+    client = MisskeyClient(host=settings.misskey.host, token=settings.misskey.access_token)
 
     # データ保存先
     data_dir = Path("data")
     data_dir.mkdir(exist_ok=True)
     output_file = data_dir / "activities.jsonl"
 
-    console.print(f"Fetching notes from {settings.misskey.url}...")
+    console.print(f"Fetching notes from {settings.misskey.host}...")
     try:
-        activities = client.fetch_notes(limit=20)
+        activities = client.fetch_notes(user_id=settings.misskey.kamojiroid_id, limit=20)
     except Exception as e:  # noqa: BLE001
         console.print(f"[red]Error fetching notes: {e}[/red]")
         return

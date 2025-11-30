@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-from pydantic import HttpUrl
+from pydantic import AnyHttpUrl
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
 from kamojiros.config.settings import SelfObserverSettings
-from kamojiros.models import Activity, ActivityType, Report, ReportAuthor, ReportType
+from kamojiros.models import Activity, ActivitySource, ActivityType, Report, ReportAuthor, ReportType
 from kamojiros.services.self_observer_service import SelfObserverService
 
 
@@ -21,10 +21,14 @@ def _make_activity(
     """テスト用の Activity を作成するヘルパー."""
     return Activity(
         id="test-id",
+        source=ActivitySource.MISSKEY,  # Added
+        source_id="test-source-id",  # Added
         type=ActivityType.NOTE,
         content=content,
         created_at=created_at,
-        source_url=HttpUrl("https://example.com/notes/test-id"),
+        author_id="test-author-id",  # Added
+        author_username="test-user",  # Added
+        source_url=AnyHttpUrl("https://example.com/notes/test-id"),
         raw_data={},
     )
 

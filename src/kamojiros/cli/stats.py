@@ -1,6 +1,5 @@
 """stats コマンド - 統計情報を表示."""
 
-from __future__ import annotations
 
 from datetime import datetime
 
@@ -8,9 +7,9 @@ import typer
 
 from kamojiros.cli.report.formatters import console, format_stats
 from kamojiros.config.settings import Settings
-from kamojiros.utils.time import JST
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.services.report_service import ReportService
+from kamojiros.utils.time import JST
 
 
 def stats(

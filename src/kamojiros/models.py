@@ -1,5 +1,6 @@
 """Kamojiros Notes のノートを表すモデル群."""
 
+
 from datetime import datetime  # noqa: TC003
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -7,7 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic import AnyHttpUrl, BaseModel, Field, HttpUrl
 
 if TYPE_CHECKING:
-    from langchain_core import Document
+    from langchain_core.documents import Document
 
 
 class ReportType(StrEnum):
@@ -124,15 +125,18 @@ class Activity(BaseModel):
     author_host: str | None = None
 
     content: str
-    urls: list[AnyHttpUrl] = Field(..., default_factory=list)
+    urls: list[AnyHttpUrl] = Field(default_factory=list)
 
     reply_to_source_id: str | None = None
     renote_source_id: str | None = None
 
+    extra_metadata: dict = Field(default_factory=dict)
+
     raw_data: dict | None  # Misskey の生 JSON（トラブルシュート・再インデックス用）
 
     @classmethod
-    def from_langchain_doc(cls, doc: Document) -> IndexedActivity:  # type: ignore[name-defined]
+    def from_langchain_doc(cls, doc: Document) -> Activity:
+        """LangChain Document から Activity を復元する."""
         m = doc.metadata
 
         # JSON 側から復元
@@ -170,4 +174,5 @@ class Activity(BaseModel):
             reply_to_source_id=m.get("reply_to_source_id"),
             renote_source_id=m.get("renote_source_id"),
             extra_metadata=extra,
+            raw_data=None,  # Document から復元時は raw_data はない
         )

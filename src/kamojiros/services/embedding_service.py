@@ -1,7 +1,7 @@
 """Embedding service using Google Gemini API."""
 
+
 import logging
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Self
 
 from google import genai
@@ -9,6 +9,8 @@ from google.api_core.exceptions import ResourceExhausted
 from google.genai.types import EmbedContentConfig, EmbedContentResponse, HttpOptions
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from kamojiros.config.settings import GeminiSettings
 
 EMBEDDING_DIMENSION = 3072
@@ -42,7 +44,9 @@ class EmbeddingService:
 
     def _to_embedding_vectors(self, embedding_response: EmbedContentResponse) -> list[list[float]]:
         """Convert EmbedContentResponse to a list of embedding vectors."""
-        return [embedding.values for embedding in embedding_response.embeddings]
+        if not embedding_response.embeddings:
+            return []
+        return [embedding.values for embedding in embedding_response.embeddings if embedding.values]
 
     def _embed_dev(self, texts: list[str], embedding_config: EmbedContentConfig) -> list[list[float]]:
         """Generate embeddings using the dev client."""
@@ -62,15 +66,15 @@ class EmbeddingService:
         )
         return self._to_embedding_vectors(embedding_response)
 
-    def _embed(self, texts: list[str], embedding_config: EmbedContentConfig) -> list[list[float]]:
+    def _embed(self, texts: Sequence[str], embedding_config: EmbedContentConfig) -> list[list[float]]:
         """Generate embeddings for a list of texts."""
-        return self._embed_vertexai(texts, embedding_config)
+        return self._embed_vertexai(list(texts), embedding_config)
         # MEMO(kamojiro): genai はうまく動作しなかった
         try:
-            return self._embed_dev(texts, embedding_config)
+            return self._embed_dev(list(texts), embedding_config)
         except ResourceExhausted as e:
             self.logger.warning("Dev embedding service quota exhausted, switching to Vertex AI: %s", e)
-            return self._embed_vertexai(texts, embedding_config)
+            return self._embed_vertexai(list(texts), embedding_config)
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         """Generate document embeddings for a list of texts."""

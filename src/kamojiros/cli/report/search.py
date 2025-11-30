@@ -8,6 +8,7 @@ from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.services.report_service import ReportService
 
+
 @app.command("search")
 def search(
     keyword: str = typer.Argument(..., help="Search keyword"),

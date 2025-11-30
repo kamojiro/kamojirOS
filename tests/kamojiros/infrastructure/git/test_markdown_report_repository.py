@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 import yaml
 
-from kamojiros.utils.time import JST
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.models import Report, ReportAuthor, ReportMeta, ReportType
+from kamojiros.utils.time import JST
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 if TYPE_CHECKING:
     from pathlib import Path
 
-NAMESPACE = Literal["misskey_sync"]
+NAMESPACE = Literal["misskey_sync", "misskey"]
 FILE_STORE_KV_STORE_NAME = "file_kv_store"
 
 
@@ -39,3 +39,9 @@ class FileKeyValueStore:
         path = self._path(namespace, key)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(value, encoding="utf-8")
+
+    def delete(self, namespace: NAMESPACE, key: str) -> None:
+        """Delete the value for the given namespace and key."""
+        path = self._path(namespace, key)
+        if path.exists():
+            path.unlink()
