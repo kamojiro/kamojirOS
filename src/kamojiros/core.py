@@ -11,7 +11,9 @@ from kamojiros.infrastructure.rag.activity_store import (
 )
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
 from kamojiros.infrastructure.state.file_kv_store import FileKeyValueStore
+from kamojiros.models import QAResult
 from kamojiros.services.misskey.activity_sync_service import MisskeyActivitySyncService
+from kamojiros.services.qa_service import QAService
 from kamojiros.services.rag.activity_ingest_service import ActivityIngestService
 from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveService
 
@@ -32,6 +34,7 @@ class ActivityStack:
     ingest: ActivityIngestService
     sync: MisskeyActivitySyncService
     retrieve: ActivityRetrieveService
+    qa: QAService
 
 
 async def build_activity_stack(settings: Settings | None = None) -> ActivityStack:
@@ -57,13 +60,10 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
     )
     retrieve = ActivityRetrieveService(store)
 
+    qa = QAService.create(settings.gemini, retrieve, misskey_client)
+
     return ActivityStack(
-        settings=settings,
-        embeddings=embeddings,
-        store=store,
-        ingest=ingest,
-        sync=sync,
-        retrieve=retrieve,
+        settings=settings, embeddings=embeddings, store=store, ingest=ingest, sync=sync, retrieve=retrieve, qa=qa
     )
 
 
@@ -104,3 +104,9 @@ async def search_misskey_activity(
         days=days,
         top_k=top_k,
     )
+
+
+async def qa_ask(query: str, *, settings: Settings | None = None) -> QAResult:
+    """Ask."""
+    stack = await build_activity_stack(settings)
+    return await stack.qa.ask(query)

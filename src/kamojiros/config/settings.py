@@ -26,7 +26,6 @@ class GeminiSettings(BaseModel):
     """Google Gemini APIの設定."""
 
     project_id: str
-    api_key: str
 
 
 class PostgreSQLSettings(BaseModel):

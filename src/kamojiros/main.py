@@ -1,9 +1,9 @@
 """Kamojiros CLI メインエントリーポイント."""
 
-
 import typer
 
 from kamojiros.cli.activity import app as activity_app
+from kamojiros.cli.qa import app as qa_app
 from kamojiros.cli.report import app as report_app
 
 app = typer.Typer(
@@ -15,6 +15,7 @@ app = typer.Typer(
 # コマンド登録
 app.add_typer(report_app, name="report")
 app.add_typer(activity_app, name="activity")
+app.add_typer(qa_app, name="qa")
 
 
 def main() -> None:

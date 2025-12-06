@@ -16,6 +16,7 @@ class ReportType(StrEnum):
 
     TECH = "tech"  # 技術メモ・実装ノート
     PAPER = "paper"  # 論文のメモ
+    FOOD = "food" # 食べ物系
     LIFE = "life"  # ライフログ系
     META = "meta"  # システム・自己観察など
 
@@ -176,3 +177,13 @@ class Activity(BaseModel):
             extra_metadata=extra,
             raw_data=None,  # Document から復元時は raw_data はない
         )
+
+class QAResult(BaseModel):
+    """QA エージェントの結果."""
+
+    question: str
+    answer_markdown: str
+
+    # RAG で使ったコンテキスト（後で Misskey/Report に埋め込めるようにしておく）
+    used_activity_ids: list[str] = Field(default_factory=list)
+    used_urls: list[AnyHttpUrl] = Field(default_factory=list)
