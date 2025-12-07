@@ -22,6 +22,7 @@ def _make_report(created_at: datetime, note_id: str = "2025-11-17-2100-meta-self
         updated_at=created_at,
         type=ReportType.META,
         author=ReportAuthor.SELF_OBSERVER,
+        date=created_at.date(),
         tags=["test", "self-observer"],
         source_urls=[],
     )

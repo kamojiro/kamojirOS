@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from kamojiros.config.base_settings import BaseSettings
 
@@ -51,6 +51,12 @@ class SelfObserverSettings(BaseModel):
     timezone: str = "Asia/Tokyo"
 
 
+class SearxngSettings(BaseModel):
+    """Searxng の設定."""
+
+    base_url: AnyHttpUrl = AnyHttpUrl("http://localhost:8080")
+
+
 class Settings(BaseSettings):
     """全体設定."""
 
@@ -60,6 +66,7 @@ class Settings(BaseSettings):
     postgres: PostgreSQLSettings
     state_store: StateStoreSettings = Field(default_factory=StateStoreSettings)
     self_observer: SelfObserverSettings = Field(default_factory=SelfObserverSettings)
+    searxng: SearxngSettings = Field(default_factory=SearxngSettings)
 
     def __init__(self, **values: Any) -> None:
         """環境変数 or 引数から設定を構築する.

@@ -1,10 +1,18 @@
 """Kamojiros CLI メインエントリーポイント."""
 
+import logging
+
 import typer
 
 from kamojiros.cli.activity import app as activity_app
 from kamojiros.cli.qa import app as qa_app
 from kamojiros.cli.report import app as report_app
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+
 
 app = typer.Typer(
     name="kamojiros",

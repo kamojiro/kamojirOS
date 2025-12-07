@@ -1,6 +1,5 @@
 """Kamojiros Notes (Git repo) に Report を保存する実装を定義するモジュール."""
 
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, ClassVar
@@ -40,7 +39,9 @@ class MarkdownReportRepository:
         created = meta.created_at
 
         # docs/journal/YYYY/MM/DD/
-        dir_path = docs_root / self.JOURNAL / f"{created.year:04d}" / f"{created.month:02d}" / f"{created.day:02d}"
+        dir_path = (
+            docs_root / self.JOURNAL / "posts" / f"{created.year:04d}" / f"{created.month:02d}" / f"{created.day:02d}"
+        )
         dir_path.mkdir(parents=True, exist_ok=True)
 
         file_path = dir_path / f"{meta.note_id}.md"
@@ -48,6 +49,7 @@ class MarkdownReportRepository:
         front_matter = {
             "note_id": meta.note_id,
             "title": meta.title,
+            "date": meta.date,
             "created_at": meta.created_at.isoformat(),
             "updated_at": meta.updated_at.isoformat(),
             "type": meta.type.value,
@@ -101,6 +103,7 @@ class MarkdownReportRepository:
             meta = ReportMeta(
                 note_id=fm["note_id"],
                 title=fm["title"],
+                date=datetime.fromisoformat(fm.get("date", fm["created_at"])).date(),
                 created_at=datetime.fromisoformat(fm["created_at"]),
                 updated_at=datetime.fromisoformat(fm["updated_at"]),
                 type=ReportType(fm["type"]),

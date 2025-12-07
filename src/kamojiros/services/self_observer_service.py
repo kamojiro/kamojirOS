@@ -1,6 +1,5 @@
 """Self Observer Service."""
 
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
@@ -53,6 +52,7 @@ class SelfObserverService:
         meta = ReportMeta(
             note_id=note_id,
             title=title,
+            date=start_dt.date(),
             created_at=datetime.now(self.tz),
             updated_at=datetime.now(self.tz),
             type=ReportType.META,

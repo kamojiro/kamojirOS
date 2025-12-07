@@ -11,7 +11,7 @@ from kamojiros.infrastructure.rag.activity_store import (
 )
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
 from kamojiros.infrastructure.state.file_kv_store import FileKeyValueStore
-from kamojiros.models import QAResult
+from kamojiros.services.deep_research.deep_research_service import DeepResearchService
 from kamojiros.services.misskey.activity_sync_service import MisskeyActivitySyncService
 from kamojiros.services.qa_service import QAService
 from kamojiros.services.rag.activity_ingest_service import ActivityIngestService
@@ -20,8 +20,10 @@ from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveSer
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
     from langchain_postgres import PGVectorStore
+    from pydantic import HttpUrl
 
-    from kamojiros.models import Activity
+    from kamojiros.models import Activity, QAResult
+    from kamojiros.services.deep_research.models import DeepResearchResult
 
 
 @dataclass
@@ -35,6 +37,7 @@ class ActivityStack:
     sync: MisskeyActivitySyncService
     retrieve: ActivityRetrieveService
     qa: QAService
+    deep_research: DeepResearchService
 
 
 async def build_activity_stack(settings: Settings | None = None) -> ActivityStack:
@@ -60,10 +63,19 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
     )
     retrieve = ActivityRetrieveService(store)
 
-    qa = QAService.create(settings.gemini, retrieve, misskey_client)
+    qa = QAService.create(settings.gemini, settings.searxng, retrieve, misskey_client)
+
+    deep_research = DeepResearchService.create(settings.gemini, settings.searxng, retrieve)
 
     return ActivityStack(
-        settings=settings, embeddings=embeddings, store=store, ingest=ingest, sync=sync, retrieve=retrieve, qa=qa
+        settings=settings,
+        embeddings=embeddings,
+        store=store,
+        ingest=ingest,
+        sync=sync,
+        retrieve=retrieve,
+        qa=qa,
+        deep_research=deep_research,
     )
 
 
@@ -110,3 +122,11 @@ async def qa_ask(query: str, *, settings: Settings | None = None) -> QAResult:
     """Ask."""
     stack = await build_activity_stack(settings)
     return await stack.qa.ask(query)
+
+
+async def deep_research(
+    topic: str, *, urls: list[HttpUrl] | None = None, known_info: str | None = None, settings: Settings | None = None
+) -> DeepResearchResult:
+    """Deep research."""
+    stack = await build_activity_stack(settings)
+    return await stack.deep_research.run_deep_research(topic=topic, urls=urls, known_info=known_info)

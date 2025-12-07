@@ -1,8 +1,13 @@
 """Deep research models."""
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, HttpUrl
+
+from kamojiros.models import ReportType
+
+if TYPE_CHECKING:
+    from kamojiros.models import ReportType
 
 
 class ResearchPlanSection(BaseModel):
@@ -19,6 +24,7 @@ class ResearchPlan(BaseModel):
     """Research plan."""
 
     sections: list[ResearchPlanSection]
+    strategy: str | None = None
 
 
 class SearchQuestion(BaseModel):
@@ -43,6 +49,7 @@ class Draft(BaseModel):
     """Draft."""
 
     markdown: str
+    open_issues: list[str] = []
 
 
 class DeepResearchState(BaseModel):
@@ -61,6 +68,10 @@ class DeepResearchState(BaseModel):
 class DeepResearchResult(BaseModel):
     """Deep research result."""
 
+    title: str
     final_report_markdown: str
+    type: ReportType
+    tags: list[str]
+    source_urls: list[HttpUrl]
     plan: ResearchPlan
     qa_history: list[SearchAnswer]

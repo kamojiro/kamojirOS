@@ -1,13 +1,14 @@
 """Kamojiros Notes のノートを表すモデル群."""
 
-
-from datetime import datetime  # noqa: TC003
+from datetime import date, datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pydantic import AnyHttpUrl, BaseModel, Field, HttpUrl
 
 if TYPE_CHECKING:
+    from datetime import date, datetime
+
     from langchain_core.documents import Document
 
 
@@ -16,7 +17,7 @@ class ReportType(StrEnum):
 
     TECH = "tech"  # 技術メモ・実装ノート
     PAPER = "paper"  # 論文のメモ
-    FOOD = "food" # 食べ物系
+    FOOD = "food"  # 食べ物系
     LIFE = "life"  # ライフログ系
     META = "meta"  # システム・自己観察など
 
@@ -35,6 +36,7 @@ class ReportMeta(BaseModel):
 
     note_id: str
     title: str
+    date: date
     created_at: datetime
     updated_at: datetime
 
@@ -177,6 +179,7 @@ class Activity(BaseModel):
             extra_metadata=extra,
             raw_data=None,  # Document から復元時は raw_data はない
         )
+
 
 class QAResult(BaseModel):
     """QA エージェントの結果."""

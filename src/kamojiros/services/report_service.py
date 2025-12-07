@@ -1,6 +1,5 @@
 """ReportService - CLI用のビジネスロジック."""
 
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -9,6 +8,8 @@ from kamojiros.utils.naming import make_note_id
 from kamojiros.utils.time import now_jst
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from kamojiros.interfaces.reports import ReportRepository
 
 
@@ -26,7 +27,7 @@ class ReportService:
         report_type: ReportType,
         author: ReportAuthor = ReportAuthor.USER,
         tags: list[str] | None = None,
-    ) -> Report:
+    ) -> tuple[Report, Path]:
         """新しいレポートを作成して保存する."""
         now = now_jst()
         note_id = make_note_id(report_type, title)
@@ -34,6 +35,7 @@ class ReportService:
         meta = ReportMeta(
             note_id=note_id,
             title=title,
+            date=now.date(),
             created_at=now,
             updated_at=now,
             type=report_type,
@@ -43,12 +45,12 @@ class ReportService:
         )
 
         report = Report(meta=meta, body_markdown=body)
-        self._report_repo.save(report)
-        return report
+        path = self.save_report(report)
+        return (report, path)
 
-    def save_report(self, report: Report) -> None:
+    def save_report(self, report: Report) -> Path:
         """既存のレポートオブジェクトを保存する."""
-        self._report_repo.save(report)
+        return self._report_repo.save(report)
 
     def list_reports(
         self,
