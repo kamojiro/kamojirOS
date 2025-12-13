@@ -9,7 +9,12 @@ from sqlalchemy.exc import ProgrammingError
 
 from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.misskey.client import MisskeyClient
-from kamojiros.infrastructure.rag.activity_store import ainit_activity_index_table, create_activity_vector_store
+from kamojiros.infrastructure.rag.activity_store import (
+    ainit_activity_index_table,
+    create_activity_pg_engine,
+    create_activity_table_name,
+    create_activity_vector_store,
+)
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
 from kamojiros.infrastructure.state.file_kv_store import FileKeyValueStore
 from kamojiros.services.misskey.activity_sync_service import MISSKEY_NAMESPACE, MisskeyActivitySyncService
@@ -36,9 +41,11 @@ def test_settings(tmp_path: Path) -> Settings:
 async def test_vector_store(test_settings: Settings) -> AsyncGenerator[PGVectorStore]:
     """."""
     embeddings = GeminiEmbeddings.create(test_settings.gemini)
+    activity_table_name = create_activity_table_name(test_settings.postgres)
     with suppress(ProgrammingError):
-        await ainit_activity_index_table(test_settings.postgres)
-    vector_store = await create_activity_vector_store(test_settings.postgres, embeddings)
+        await ainit_activity_index_table(test_settings.postgres, activity_table_name)
+    pg_engine = await create_activity_pg_engine(test_settings.postgres)
+    vector_store = await create_activity_vector_store(pg_engine, embeddings, activity_table_name)
 
     try:
         yield vector_store

@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import typer
 from rich.console import Console
 
+from kamojiros.activity_bootstrap import qa_ask
 from kamojiros.cli.qa import app
-from kamojiros.core import qa_ask
 
 if TYPE_CHECKING:
     from kamojiros.models import QAResult

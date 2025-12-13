@@ -5,7 +5,7 @@ import asyncio
 import typer
 from rich.console import Console
 
-from kamojiros import core
+from kamojiros.activity_bootstrap import sync_misskey_activity
 from kamojiros.cli.activity import app
 
 console = Console()
@@ -24,7 +24,7 @@ def sync(
 
     async def _run() -> None:
         console.print("[bold]Syncing Misskey activities...[/bold]")
-        await core.sync_misskey_activity(
+        await sync_misskey_activity(
             user_id=user_id,
         )
         console.print("[green]Done.[/green]")

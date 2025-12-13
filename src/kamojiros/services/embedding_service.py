@@ -3,11 +3,14 @@
 import logging
 from typing import TYPE_CHECKING, Self
 
-from google import genai
-from google.genai.types import EmbedContentConfig, EmbedContentResponse, HttpOptions
+from google.genai.types import EmbedContentConfig, EmbedContentResponse
+
+from kamojiros.infrastructure.genai.client_factory import create_genai_client
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from google import genai
 
     from kamojiros.config.settings import GeminiSettings
 
@@ -15,27 +18,32 @@ EMBEDDING_DIMENSION = 3072
 
 
 class EmbeddingService:
-    """Embedding service using Google Gemini API."""
+    """Embedding service using Google Gemini API.
+
+    Note:
+        This class is currently unused and experimental.
+        The active implementation uses `GeminiEmbeddings` in `kamojiros.infrastructure.rag.gemini_embeddings`.
+
+    """
 
     embedding_document_config = EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT")
     embedding_query_config = EmbedContentConfig(task_type="RETRIEVAL_QUERY")
 
-    def __init__(self, project_id: str) -> None:
+    def __init__(self, client: genai.Client) -> None:
         """Initialize EmbeddingService."""
-        self.vertexai_client = genai.Client(
-            vertexai=True,
-            project=project_id,
-            location="us-central1",
-            http_options=HttpOptions(api_version="v1"),
-        )
+        self.client = client
         self.embedding_model = "gemini-embedding-001"
         self.logger = logging.getLogger(__name__)
 
     @classmethod
     def create(cls, gemini_settings: GeminiSettings) -> Self:
         """Create an instance of EmbeddingService from GeminiSettings."""
-        return cls(
+        client = create_genai_client(
             project_id=gemini_settings.project_id,
+            api_key=None,  # TODO(kamojiro): Pass api_key from settings if needed
+        )
+        return cls(
+            client=client,
         )
 
     def _to_embedding_vectors(self, embedding_response: EmbedContentResponse) -> list[list[float]]:
@@ -46,7 +54,7 @@ class EmbeddingService:
 
     def _embed_vertexai(self, texts: list[str], embedding_config: EmbedContentConfig) -> list[list[float]]:
         """Generate embeddings using the Vertex AI client."""
-        embedding_response = self.vertexai_client.models.embed_content(
+        embedding_response = self.client.models.embed_content(
             model=self.embedding_model,
             contents=texts,
             config=embedding_config,

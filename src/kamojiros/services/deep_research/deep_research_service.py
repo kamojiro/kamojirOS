@@ -218,8 +218,8 @@ class DeepResearchService:
         activity_retrieve_service: ActivityRetrieveService,
     ) -> Self:
         """Create service with all agents."""
-        flash_model = create_pydantic_ai_model(gemini_settings, "gemini-2.5-flash")
-        pro_model = create_pydantic_ai_model(gemini_settings, "gemini-2.5-pro")
+        flash_model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-flash")
+        pro_model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-pro")
 
         searxng_tool = searxng_search_tool(searxng_settings)
 

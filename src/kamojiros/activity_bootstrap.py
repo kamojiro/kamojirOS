@@ -3,10 +3,14 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from langchain_postgres.v2.vectorstores import PGVectorStore
+
 from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.misskey.client import MisskeyClient
 from kamojiros.infrastructure.rag.activity_store import (
     ainit_activity_index_table,
+    create_activity_pg_engine,
+    create_activity_table_name,
     create_activity_vector_store,
 )
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
@@ -48,8 +52,10 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
     embeddings = GeminiEmbeddings.create(settings.gemini)
 
     # VectorStore 初期化
-    await ainit_activity_index_table(settings.postgres)
-    store = await create_activity_vector_store(settings.postgres, embeddings)
+    activity_table_name = create_activity_table_name(settings.postgres)
+    await ainit_activity_index_table(settings.postgres, activity_table_name)
+    pg_engine = await create_activity_pg_engine(settings.postgres)
+    store: PGVectorStore = await create_activity_vector_store(pg_engine, embeddings, activity_table_name)
 
     # Services
     ingest = ActivityIngestService(store)

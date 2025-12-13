@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import HttpUrl, TypeAdapter
 
+from kamojiros.activity_bootstrap import deep_research
 from kamojiros.cli.report import app
 from kamojiros.cli.report.formatters import console
 from kamojiros.config.settings import Settings
-from kamojiros.core import deep_research
 from kamojiros.infrastructure.git.markdown_report_writer import MarkdownReportRepository
 from kamojiros.models import ReportAuthor
 from kamojiros.services.report_service import ReportService

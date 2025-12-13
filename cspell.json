@@ -33,6 +33,7 @@
     "stackoverflow",
     "TIMESTAMPTZ",
     "vectorstore",
+    "vectorstores",
     "vertexai"
   ],
   "files": [

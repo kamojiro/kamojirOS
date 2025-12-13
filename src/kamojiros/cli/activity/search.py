@@ -5,8 +5,8 @@ import asyncio
 import typer
 from rich.console import Console
 
+from kamojiros.activity_bootstrap import search_misskey_activity
 from kamojiros.cli.activity import app
-from kamojiros.core import search_misskey_activity
 
 console = Console()
 

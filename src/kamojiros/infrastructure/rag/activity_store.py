@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from langchain_postgres import PGVectorStore
+from langchain_postgres import PGEngine, PGVectorStore
 from psycopg.errors import DuplicateTable
 from sqlalchemy.exc import ProgrammingError
 
@@ -15,16 +15,17 @@ if TYPE_CHECKING:
     from kamojiros.config.settings import PostgreSQLSettings
 
 
-def _activity_table_name(pg_settings: PostgreSQLSettings) -> str:
+def create_activity_table_name(pg_settings: PostgreSQLSettings) -> str:
+    """PostgreSQLSettings から activity_index テーブル名を取得する."""
     return pg_settings.activity_index_name or ACTIVITY_INDEX_SCHEMA.table_name
 
 
-async def ainit_activity_index_table(pg_settings: PostgreSQLSettings) -> None:
+async def ainit_activity_index_table(pg_settings: PostgreSQLSettings, activity_table_name: str) -> None:
     """activity_index テーブルを作成（初期化）する."""
     pg_engine = await create_pg_engine(pg_settings)
     try:
         await pg_engine.ainit_vectorstore_table(
-            table_name=_activity_table_name(pg_settings),
+            table_name=activity_table_name,
             vector_size=ACTIVITY_INDEX_SCHEMA.vector_size,
             id_column=ACTIVITY_INDEX_SCHEMA.id_column,
             content_column=ACTIVITY_INDEX_SCHEMA.content_column,
@@ -41,16 +42,22 @@ async def ainit_activity_index_table(pg_settings: PostgreSQLSettings) -> None:
         raise
 
 
-async def create_activity_vector_store(
+async def create_activity_pg_engine(
     pg_settings: PostgreSQLSettings,
+) -> PGEngine:
+    """activity_index 用 PGEngine を構築する factory 関数."""
+    return await create_pg_engine(pg_settings)
+
+
+async def create_activity_vector_store(
+    pg_engine: PGEngine,
     embeddings: Embeddings,
+    activity_table_name: str,
 ) -> PGVectorStore:
     """activity_index 用 PGVectorStore を構築する factory 関数."""
-    pg_engine = await create_pg_engine(pg_settings)
-
     return await PGVectorStore.create(
         engine=pg_engine,
-        table_name=_activity_table_name(pg_settings),
+        table_name=activity_table_name,
         embedding_service=embeddings,
         id_column=ACTIVITY_INDEX_SCHEMA.id_column.name,
         content_column=ACTIVITY_INDEX_SCHEMA.content_column,

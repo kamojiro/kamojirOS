@@ -122,7 +122,7 @@ class QAService:
         client: MisskeyClient,
     ) -> Self:
         """Create rag answer."""
-        model = create_pydantic_ai_model(gemini_settings, "gemini-2.5-pro")
+        model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-flash")
         searxng_tool = searxng_search_tool(searxng_settings)
         agent = Agent(
             model,

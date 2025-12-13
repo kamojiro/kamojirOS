@@ -2,12 +2,15 @@
 
 from typing import TYPE_CHECKING, Self
 
-from google import genai
-from google.genai.types import EmbedContentConfig, EmbedContentResponse, HttpOptions
+from google.genai.types import EmbedContentConfig, EmbedContentResponse
 from langchain_core.embeddings import Embeddings
+
+from kamojiros.infrastructure.genai.client_factory import create_genai_client
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from google import genai
 
     from kamojiros.config.settings import GeminiSettings
 
@@ -35,14 +38,11 @@ class GeminiEmbeddings(Embeddings):
     @classmethod
     def create(cls, gemini_settings: GeminiSettings) -> Self:
         """GeminiSettings から GeminiEmbeddings インスタンスを作る."""
-        return cls(
-            client=genai.Client(
-                vertexai=True,
-                project=gemini_settings.project_id,
-                location="us-central1",
-                http_options=HttpOptions(api_version="v1"),
-            ),
+        client = create_genai_client(
+            project_id=gemini_settings.project_id,
+            api_key=None,  # TODO(kamojiro): Pass api_key from settings if needed
         )
+        return cls(client=client)
 
     # ---------- 内部ヘルパー ----------
 

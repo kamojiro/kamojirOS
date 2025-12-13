@@ -10,8 +10,16 @@ if TYPE_CHECKING:
 
 
 def create_pydantic_ai_model(
-    gemini_settings: GeminiSettings, model_name: Literal["gemini-2.5-pro", "gemini-2.5-flash"] = "gemini-2.5-flash"
+    gemini_settings: GeminiSettings,
+    *,
+    vertex: bool = False,
+    model_name: Literal["gemini-2.5-pro", "gemini-2.5-flash"] = "gemini-2.5-flash",
 ) -> GoogleModel:
     """Create PydanticAI model."""
-    provider = GoogleProvider(project=gemini_settings.project_id, location="us-central1")
+    provider: GoogleProvider
+    if not vertex and gemini_settings.api_key and model_name == "gemini-2.5-flash":
+        provider = GoogleProvider(api_key=gemini_settings.api_key)
+    else:
+        provider = GoogleProvider(project=gemini_settings.project_id, location="us-central1")
+
     return GoogleModel(model_name, provider=provider)

@@ -76,7 +76,11 @@ class MarkdownReportRepository:
 
         while current_date <= today:
             day_dir = (
-                journal_root / f"{current_date.year:04d}" / f"{current_date.month:02d}" / f"{current_date.day:02d}"
+                journal_root
+                / "posts"
+                / f"{current_date.year:04d}"
+                / f"{current_date.month:02d}"
+                / f"{current_date.day:02d}"
             )
             if day_dir.exists():
                 for md_file in day_dir.glob("*.md"):
