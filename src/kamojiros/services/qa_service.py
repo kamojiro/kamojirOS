@@ -1,5 +1,6 @@
 """Activity retrieve service."""
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ConfigDict
@@ -7,8 +8,9 @@ from pydantic_ai import Agent, RunContext
 
 from kamojiros.infrastructure.genai.pydantic_ai_factory import create_pydantic_ai_model
 from kamojiros.infrastructure.tools.searxng_search_tool import searxng_search_tool
-from kamojiros.models import Activity, QAResult
+from kamojiros.models import Activity, ActivitySource, QAResult
 from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveService
+from kamojiros.utils.time import JST
 
 if TYPE_CHECKING:
     from kamojiros.config.settings import GeminiSettings, SearxngSettings
@@ -29,6 +31,11 @@ QA_SYSTEM_PROMPT = """
 - 質問文に主語がない場合は、主語はユーザー本人（あなた）であると解釈します。
 
 # 利用できるツール
+- `list_between(start_iso, end_iso, source, limit, offset)`
+  - `start_iso`/`end_iso` は ISO8601 形式の文字列（例: 2025-12-01T00:00:00+09:00）で指定します。
+  - 指定期間の Activity を新しい順に取得します。
+  - 「先週の日記を見せて」「12月の活動を教えて」など、特定の期間で絞り込みたいときに使います。
+  - `search_activities` と違い、キーワード検索ではなく **期間による確実なリストアップ** です。
 - `search_activities(query, days, top_k)`
   - ユーザーの Activity をベクトル検索して取得するツールです。
   - ユーザーの「最近の投稿」「最近考えていること」「これまでに学んだこと/興味を持ったこと」などを探すときに使います。
@@ -42,12 +49,13 @@ QA_SYSTEM_PROMPT = """
   - Activity だけでは情報が不足しているときや、外部の最新情報が明らかに必要なときだけ使います。
 
 # 回答方針
-1. ユーザーの質問を読み、まず `search_activities` で関連しそうな Activity を検索し、その内容を要約・整理します。
+1. ユーザーの質問を読み、適したツール（`search_activities` または `list_between`）を選んで Activity を取得し、その内容を要約・整理します。
 2. Activity に十分な情報がある場合は、それを主な根拠として回答します。
 3. Activity だけでは不足していたり、外部知識が明らかに必要な場合だけ `searxng_search` を呼び出し、必要な情報だけを抽出して補足してください。
 4. Activity の内容と Web 検索結果が矛盾する場合は、ユーザーの Activity を優先しつつ、
    - 「一般的にはこうだが、あなたのメモではこう書かれている」という形で丁寧に説明してください。
 5. それでも分からない・情報が不十分な場合は、無理に断定せず、「ここまでは分かるが、これ以上は不確か」という形で率直に伝えてください。
+6. 「先週」「今月」「直近1週間」などの言葉があったら、上記の現在日時から計算して `list_between` で期間指定検索を行ってください。
 
 # 出力フォーマット
 - 回答は **必ず日本語** で、**Markdown** 形式で出力してください。
@@ -70,12 +78,19 @@ class QADependencies(BaseModel):
     """QA Agent が使う依存オブジェクト."""
 
     activity_retriever: ActivityRetrieveService
+    now: datetime  # 現在時刻（テスト時に固定値を注入可能）
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 def register_qa_tools(agent: Agent[QADependencies, QAResult]) -> None:
     """QA で利用するツールの登録."""
+
+    @agent.system_prompt(dynamic=True)
+    def add_current_time(ctx: RunContext[QADependencies]) -> str:
+        """現在時刻を動的に system prompt に追加する."""
+        now = ctx.deps.now
+        return f"# 現在時刻\n現在時刻 (JST): {now.isoformat()}\n今日の日付: {now.date().isoformat()}"
 
     @agent.tool
     async def search_activities(
@@ -96,6 +111,29 @@ def register_qa_tools(agent: Agent[QADependencies, QAResult]) -> None:
             query=query,
             days=days,
             top_k=top_k,
+        )
+
+    @agent.tool
+    async def list_between(
+        ctx: RunContext[QADependencies],
+        start_iso: str,
+        end_iso: str,
+        *,
+        source: str | None = "misskey",
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[Activity]:
+        """指定期間の Activity (Noteなど) を新しい順に列挙します.
+
+        start/end は ISO8601形式 (例: 2025-12-01T00:00:00+09:00) で指定してください。
+        """
+        s = datetime.fromisoformat(start_iso)
+        e = datetime.fromisoformat(end_iso)
+
+        src = ActivitySource(source) if source else None
+
+        return await ctx.deps.activity_retriever.list_between_activity(
+            start=s, end=e, source=src, limit=limit, offset=offset
         )
 
 
@@ -122,7 +160,7 @@ class QAService:
         client: MisskeyClient,
     ) -> Self:
         """Create rag answer."""
-        model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-flash")
+        model = create_pydantic_ai_model(gemini_settings, model_name="gemini-2.5-flash")
         searxng_tool = searxng_search_tool(searxng_settings)
         agent = Agent(
             model,
@@ -137,7 +175,10 @@ class QAService:
 
     async def ask(self, query: str) -> QAResult:
         """Ask QA."""
-        deps = QADependencies(activity_retriever=self._activity_retrieve_service)
+        deps = QADependencies(
+            activity_retriever=self._activity_retrieve_service,
+            now=datetime.now(tz=JST),
+        )
 
         async with self._agent.iter(user_prompt=query, deps=deps) as run:
             async for node in run:

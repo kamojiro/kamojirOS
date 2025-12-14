@@ -39,7 +39,7 @@ def test_save_creates_expected_path_and_file(tmp_path: Path) -> None:
     path = repo.save(report)
 
     # ファイルパスの検証
-    expected_dir = notes_repo_root / "docs" / "journal" / "2025" / "11" / "17"
+    expected_dir = notes_repo_root / "docs" / "journal" / "posts" / "2025" / "11" / "17"
     assert path.parent == expected_dir
     assert path.name == "2025-11-17-2100-meta-self-observer-test.md"
 

@@ -77,7 +77,7 @@ def test_create_deep_research(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
         qa_history=[],
     )
 
-    async def mock_deep_research() -> DeepResearchResult:
+    async def mock_deep_research(**_kwargs: object) -> DeepResearchResult:
         return mock_result
 
     monkeypatch.setattr("kamojiros.cli.report.create.deep_research", mock_deep_research)

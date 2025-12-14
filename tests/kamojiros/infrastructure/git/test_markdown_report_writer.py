@@ -1,5 +1,6 @@
 """Tests for MarkdownReportRepository."""
 
+import textwrap
 from datetime import UTC, datetime
 from pathlib import Path  # noqa: TC003
 
@@ -45,17 +46,17 @@ def test_find_recent_reports(repo: MarkdownReportRepository) -> None:
     target_dir = repo.notes_repo_root / "docs/journal/posts/2025/12/01"
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    meta_content = """
-note_id: recent_note
-title: Recent Report
-date: 2025-12-01
-created_at: 2025-12-01T10:00:00+00:00
-updated_at: 2025-12-01T10:00:00+00:00
-type: tech
-author: user
-tags: []
-source_urls: []
-"""
+    meta_content = textwrap.dedent("""
+    note_id: recent_note
+    title: Recent Report
+    date: 2025-12-01
+    created_at: 2025-12-01T10:00:00+00:00
+    updated_at: 2025-12-01T10:00:00+00:00
+    type: tech
+    author: user
+    tags: []
+    source_urls: []
+    """)
     file_content = f"---{meta_content}---\n\nRecent Content"
     (target_dir / "recent_note.md").write_text(file_content)
 

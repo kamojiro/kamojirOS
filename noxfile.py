@@ -94,13 +94,11 @@ def cspell(session: Session) -> None:
 
 
 @session(
-    venv_backend="none",
+    venv_backend="uv",
+    python=PYTHON_VERSIONS,
+    uv_groups=["dev"],
     tags=["test", "ci"],
 )
 def test(session: Session) -> None:
     """Run tests with Pytest."""
-    session.run(
-        "cspell",
-        *CSPELL_TARGETS,
-        external=True,  # 外部コマンド実行なのでつけておくと安心
-    )
+    session.run("pytest", *_targets(session))

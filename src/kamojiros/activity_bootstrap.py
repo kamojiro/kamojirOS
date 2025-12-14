@@ -3,16 +3,20 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from langchain_postgres import PGEngine
 from langchain_postgres.v2.vectorstores import PGVectorStore
 
 from kamojiros.config.settings import Settings
 from kamojiros.infrastructure.misskey.client import MisskeyClient
+from kamojiros.infrastructure.rag.activity_index_query_repository import (
+    ActivityIndexQueryRepositoryImpl,
+)
 from kamojiros.infrastructure.rag.activity_store import (
     ainit_activity_index_table,
-    create_activity_pg_engine,
     create_activity_table_name,
     create_activity_vector_store,
 )
+from kamojiros.infrastructure.rag.db import create_async_engine_from_settings
 from kamojiros.infrastructure.rag.gemini_embeddings import GeminiEmbeddings
 from kamojiros.infrastructure.state.file_kv_store import FileKeyValueStore
 from kamojiros.services.deep_research.deep_research_service import DeepResearchService
@@ -52,10 +56,18 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
     embeddings = GeminiEmbeddings.create(settings.gemini)
 
     # VectorStore 初期化
+    # VectorStore 初期化
     activity_table_name = create_activity_table_name(settings.postgres)
     await ainit_activity_index_table(settings.postgres, activity_table_name)
-    pg_engine = await create_activity_pg_engine(settings.postgres)
+
+    # Engine を作成して共有
+    async_engine = create_async_engine_from_settings(settings.postgres)
+    pg_engine = PGEngine.from_engine(async_engine)
+
     store: PGVectorStore = await create_activity_vector_store(pg_engine, embeddings, activity_table_name)
+
+    # QueryRepository 作成
+    query_repo = ActivityIndexQueryRepositoryImpl(async_engine, activity_table_name)
 
     # Services
     ingest = ActivityIngestService(store)
@@ -67,7 +79,7 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
         kv_store=kv_store,
         misskey_client=misskey_client,
     )
-    retrieve = ActivityRetrieveService(store)
+    retrieve = ActivityRetrieveService(store, query_repo=query_repo)
 
     qa = QAService.create(settings.gemini, settings.searxng, retrieve, misskey_client)
 

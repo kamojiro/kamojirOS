@@ -149,7 +149,6 @@ def create_pydantic_ai_model(
     else:
         # Vertex
         provider = GoogleProvider(
-            vertexai=True,
             project=gemini_settings.project_id,
             location="us-central1",
         )

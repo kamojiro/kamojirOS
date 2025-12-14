@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, Self
 
 from pydantic_ai import Agent, RunContext
@@ -17,6 +18,7 @@ from kamojiros.services.deep_research.models import (
     SearchAnswer,
     SearchQuestion,
 )
+from kamojiros.utils.time import JST
 
 if TYPE_CHECKING:
     from pydantic import HttpUrl
@@ -36,6 +38,7 @@ class DeepResearchDependencies:
     """DeepResearch Agent が使う依存オブジェクト."""
 
     activity_retriever: ActivityRetrieveService
+    now: datetime  # 現在時刻（テスト時に固定値を注入可能）
     state: DeepResearchState | None = None
 
 
@@ -156,6 +159,12 @@ FINAL_REPORT_AGENT_SYSTEM_PROMPT = (
 def register_answer_agent_tools(agent: Agent[DeepResearchDependencies, SearchAnswer]) -> None:
     """Answer Agent 用ツールの登録."""
 
+    @agent.system_prompt(dynamic=True)
+    def add_current_time(ctx: RunContext[DeepResearchDependencies]) -> str:
+        """現在時刻を動的に system prompt に追加する."""
+        now = ctx.deps.now
+        return f"# 現在時刻\n現在時刻 (JST): {now.isoformat()}\n今日の日付: {now.date().isoformat()}"
+
     @agent.tool
     async def search_activities(
         ctx: RunContext[DeepResearchDependencies],
@@ -218,8 +227,8 @@ class DeepResearchService:
         activity_retrieve_service: ActivityRetrieveService,
     ) -> Self:
         """Create service with all agents."""
-        flash_model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-flash")
-        pro_model = create_pydantic_ai_model(gemini_settings, model_name = "gemini-2.5-pro")
+        flash_model = create_pydantic_ai_model(gemini_settings, model_name="gemini-2.5-flash")
+        pro_model = create_pydantic_ai_model(gemini_settings, model_name="gemini-2.5-pro")
 
         searxng_tool = searxng_search_tool(searxng_settings)
 
@@ -306,6 +315,7 @@ class DeepResearchService:
 
         deps = DeepResearchDependencies(
             activity_retriever=self._activity_retrieve_service,
+            now=datetime.now(tz=JST),
             state=state,
         )
 

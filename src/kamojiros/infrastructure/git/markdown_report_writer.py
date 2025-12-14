@@ -107,9 +107,15 @@ class MarkdownReportRepository:
             meta = ReportMeta(
                 note_id=fm["note_id"],
                 title=fm["title"],
-                date=datetime.fromisoformat(fm.get("date", fm["created_at"])).date(),
-                created_at=datetime.fromisoformat(fm["created_at"]),
-                updated_at=datetime.fromisoformat(fm["updated_at"]),
+                date=fm["date"]
+                if isinstance(fm.get("date"), (str, type(None))) is False
+                else datetime.fromisoformat(str(fm.get("date", fm["created_at"]))).date(),
+                created_at=fm["created_at"]
+                if isinstance(fm["created_at"], datetime)
+                else datetime.fromisoformat(fm["created_at"]),
+                updated_at=fm["updated_at"]
+                if isinstance(fm["updated_at"], datetime)
+                else datetime.fromisoformat(fm["updated_at"]),
                 type=ReportType(fm["type"]),
                 author=ReportAuthor(fm["author"]),
                 tags=fm.get("tags", []),

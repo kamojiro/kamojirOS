@@ -26,6 +26,7 @@
     "pytest",
     "rauthor",
     "renote",
+    "respx",
     "rtype",
     "safesearch",
     "Searx",

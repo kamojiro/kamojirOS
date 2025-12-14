@@ -11,6 +11,10 @@ if TYPE_CHECKING:
     from langchain_core.documents import Document
     from langchain_postgres import PGVectorStore
 
+    from kamojiros.infrastructure.rag.activity_index_query_repository import (
+        ActivityIndexQueryRepositoryImpl,
+    )
+
 
 def _activity_from_document(doc: Document) -> Activity:
     m = doc.metadata
@@ -39,9 +43,14 @@ def _activity_from_document(doc: Document) -> Activity:
 class ActivityRetrieveService:
     """Activity retriever."""
 
-    def __init__(self, store: PGVectorStore) -> None:
+    def __init__(
+        self,
+        store: PGVectorStore,
+        query_repo: ActivityIndexQueryRepositoryImpl | None = None,
+    ) -> None:
         """Initialize."""
         self._store = store
+        self._query_repo = query_repo
 
     async def search_recent_misskey_activity(
         self,
@@ -74,3 +83,27 @@ class ActivityRetrieveService:
         retriever = self._store.as_retriever(search_kwargs=search_kwargs)
         docs: Sequence[Document] = await retriever.ainvoke(query)
         return [_activity_from_document(doc) for doc in docs]
+
+    async def list_between_activity(
+        self,
+        start: datetime,
+        end: datetime,
+        *,
+        source: ActivitySource | None = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[Activity]:
+        """List activities between start and end (SQL direct)."""
+        if not self._query_repo:
+            msg = "ActivityIndexQueryRepository is not configured"
+            raise RuntimeError(msg)
+
+        return list(
+            await self._query_repo.list_between(
+                start=start,
+                end=end,
+                source=source,
+                limit=limit,
+                offset=offset,
+            )
+        )
