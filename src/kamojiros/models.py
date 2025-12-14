@@ -190,3 +190,17 @@ class QAResult(BaseModel):
     # RAG で使ったコンテキスト（後で Misskey/Report に埋め込めるようにしておく）
     used_activity_ids: list[str] = Field(default_factory=list)
     used_urls: list[AnyHttpUrl] = Field(default_factory=list)
+
+
+class ThemeSuggestion(BaseModel):
+    """テーマ提案（DeepResearch 入力を内包）."""
+
+    # DeepResearch に渡す情報
+    topic: str
+    urls: list[HttpUrl] = Field(default_factory=list)
+    known_info: str | None = None
+
+    # 表示用補助情報
+    rationale: str  # なぜこのテーマを提案するか
+    confidence: float = Field(ge=0.0, le=1.0, default=0.5)  # 0.0-1.0
+    tags: list[str] = Field(default_factory=list)

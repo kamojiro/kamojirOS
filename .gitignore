@@ -13,6 +13,7 @@ wheels/
 # Development docs
 dev/docs/for_llm/
 dev/docs/materials/
+dev/docs/memo/
 samples/
 
 # node

@@ -24,6 +24,7 @@ from kamojiros.services.misskey.activity_sync_service import MisskeyActivitySync
 from kamojiros.services.qa_service import QAService
 from kamojiros.services.rag.activity_ingest_service import ActivityIngestService
 from kamojiros.services.rag.activity_retrieve_service import ActivityRetrieveService
+from kamojiros.services.theme_generator_service import ThemeGeneratorService
 
 if TYPE_CHECKING:
     from langchain_core.embeddings import Embeddings
@@ -46,6 +47,7 @@ class ActivityStack:
     retrieve: ActivityRetrieveService
     qa: QAService
     deep_research: DeepResearchService
+    theme: ThemeGeneratorService
 
 
 async def build_activity_stack(settings: Settings | None = None) -> ActivityStack:
@@ -85,6 +87,8 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
 
     deep_research = DeepResearchService.create(settings.gemini, settings.searxng, retrieve)
 
+    theme = ThemeGeneratorService.create(settings.gemini, settings.searxng, retrieve)
+
     return ActivityStack(
         settings=settings,
         embeddings=embeddings,
@@ -94,6 +98,7 @@ async def build_activity_stack(settings: Settings | None = None) -> ActivityStac
         retrieve=retrieve,
         qa=qa,
         deep_research=deep_research,
+        theme=theme,
     )
 
 

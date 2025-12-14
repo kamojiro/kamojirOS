@@ -7,6 +7,7 @@ import typer
 from kamojiros.cli.activity import app as activity_app
 from kamojiros.cli.qa import app as qa_app
 from kamojiros.cli.report import app as report_app
+from kamojiros.cli.theme import app as theme_app
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +25,7 @@ app = typer.Typer(
 app.add_typer(report_app, name="report")
 app.add_typer(activity_app, name="activity")
 app.add_typer(qa_app, name="qa")
+app.add_typer(theme_app, name="theme")
 
 
 def main() -> None:
